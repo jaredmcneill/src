@@ -551,3 +551,7 @@ file	dev/usb/udsir.c			udsir
 device	ualea
 attach	ualea at usbifif
 file	dev/usb/ualea.c			ualea
+
+# Broadcom FullMAC USB wireless adapter
+attach	bwfm at usbdevif with bwfm_usb
+file	dev/usb/if_bwfm_usb.c		bwfm_usb

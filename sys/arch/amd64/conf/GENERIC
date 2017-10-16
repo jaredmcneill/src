@@ -1025,6 +1025,7 @@ run*	at uhub? port ?		# Ralink Technology RT(2[78]|30)00 802.11a/b/g/n
 urtw*	at uhub? port ?		# Realtek RTL8187/RTL8187B 802.11b/g
 urtwn*	at uhub? port ?		# Realtek RTL8188CU/RTL8192CU 802.11b/g/n
 zyd*	at uhub? port ?		# Zydas ZD1211
+bwfm*	at uhub? port ?		# Broadcom FullMAC 802.11a/b/g/n/ac
 
 # USB scanners that use SCSI emulation, e.g., HP5300
 usscanner* at uhub? port ?

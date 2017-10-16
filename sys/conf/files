@@ -1415,6 +1415,10 @@ file	dev/ic/nvme.c			nvme
 attach	ld at nvme with ld_nvme
 file	dev/ic/ld_nvme.c		ld_nvme
 
+# Broadcom FullMAC 802.11 driver
+device	bwfm: arp, ifnet, wlan
+file	dev/ic/bwfm.c			bwfm
+
 # legitimate pseudo-devices
 #
 defpseudodev vnd:	disk
