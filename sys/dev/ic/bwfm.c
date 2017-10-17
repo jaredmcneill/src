@@ -1,3 +1,4 @@
+/* $NetBSD$ */
 /* $OpenBSD: bwfm.c,v 1.5 2017/10/16 22:27:16 patrick Exp $ */
 /*
  * Copyright (c) 2010-2016 Broadcom Corporation
@@ -332,13 +333,33 @@ bwfm_init(struct ifnet *ifp)
 		return EIO;
 	}
 
-	if (bwfm_fwvar_var_get_data(sc, "event_msgs", evmask, sizeof(evmask))) {
-		printf("%s: could not get event mask\n", DEVNAME(sc));
-		return EIO;
-	}
-	evmask[BWFM_E_IF / 8] |= 1 << (BWFM_E_IF % 8);
-	evmask[BWFM_E_ESCAN_RESULT / 8] |= 1 << (BWFM_E_ESCAN_RESULT % 8);
-	evmask[BWFM_E_SET_SSID / 8] |= 1 << (BWFM_E_SET_SSID % 8);
+	memset(evmask, 0, sizeof(evmask));
+#define	ENABLE_EVENT(e)		evmask[(e) / 8] |= 1 << ((e) % 8)
+	/* Events used to drive the state machine */
+	ENABLE_EVENT(BWFM_E_ASSOC);
+	ENABLE_EVENT(BWFM_E_ESCAN_RESULT);
+	ENABLE_EVENT(BWFM_E_SET_SSID);
+
+	/* Other events we are curious about */
+	ENABLE_EVENT(BWFM_E_IF);
+	ENABLE_EVENT(BWFM_E_LINK);
+	ENABLE_EVENT(BWFM_E_JOIN);
+	ENABLE_EVENT(BWFM_E_DEAUTH);
+	ENABLE_EVENT(BWFM_E_DEAUTH_IND);
+	ENABLE_EVENT(BWFM_E_AUTH);
+	ENABLE_EVENT(BWFM_E_AUTH_IND);
+	ENABLE_EVENT(BWFM_E_ASSOC);
+	ENABLE_EVENT(BWFM_E_ASSOC_IND);
+	ENABLE_EVENT(BWFM_E_REASSOC_IND);
+	ENABLE_EVENT(BWFM_E_DISASSOC_IND);
+	ENABLE_EVENT(BWFM_E_PSK_SUP);
+	ENABLE_EVENT(BWFM_E_ASSOC_START);
+#undef	ENABLE_EVENT
+
+#ifdef BWFM_DEBUG
+	memset(evmask, 0xff, sizeof(evmask));
+#endif
+	
 	if (bwfm_fwvar_var_set_data(sc, "event_msgs", evmask, sizeof(evmask))) {
 		printf("%s: could not set event mask\n", DEVNAME(sc));
 		return EIO;
@@ -1194,6 +1215,7 @@ void
 bwfm_connect(struct bwfm_softc *sc)
 {
 	struct ieee80211com *ic = &sc->sc_ic;
+	struct ieee80211_node *ni = ic->ic_bss;
 	struct bwfm_ext_join_params *params;
 
 #if notyet
@@ -1252,11 +1274,11 @@ bwfm_connect(struct bwfm_softc *sc)
 	bwfm_fwvar_var_set_int(sc, "auth", BWFM_AUTH_OPEN);
 	bwfm_fwvar_var_set_int(sc, "mfp", BWFM_MFP_NONE);
 
-	if (ic->ic_des_esslen && ic->ic_des_esslen < BWFM_MAX_SSID_LEN) {
+	if (ni->ni_esslen && ni->ni_esslen < BWFM_MAX_SSID_LEN) {
 		params = kmem_zalloc(sizeof(*params), KM_SLEEP);
-		memcpy(params->ssid.ssid, ic->ic_des_essid, ic->ic_des_esslen);
-		params->ssid.len = htole32(ic->ic_des_esslen);
-		memset(params->assoc.bssid, 0xff, sizeof(params->assoc.bssid));
+		memcpy(params->ssid.ssid, ni->ni_essid, ni->ni_esslen);
+		params->ssid.len = htole32(ni->ni_esslen);
+		memcpy(params->assoc.bssid, ni->ni_bssid, sizeof(params->assoc.bssid));
 		params->scan.scan_type = -1;
 		params->scan.nprobes = htole32(-1);
 		params->scan.active_time = htole32(-1);
@@ -1265,9 +1287,9 @@ bwfm_connect(struct bwfm_softc *sc)
 		if (bwfm_fwvar_var_set_data(sc, "join", params, sizeof(*params))) {
 			struct bwfm_join_params join;
 			memset(&join, 0, sizeof(join));
-			memcpy(join.ssid.ssid, ic->ic_des_essid, ic->ic_des_esslen);
-			join.ssid.len = htole32(ic->ic_des_esslen);
-			memset(join.assoc.bssid, 0xff, sizeof(join.assoc.bssid));
+			memcpy(join.ssid.ssid, ni->ni_essid, ni->ni_esslen);
+			join.ssid.len = htole32(ni->ni_esslen);
+			memcpy(join.assoc.bssid, ni->ni_bssid, sizeof(join.assoc.bssid));
 			bwfm_fwvar_cmd_set_data(sc, BWFM_C_SET_SSID, &join,
 			    sizeof(join));
 		}
@@ -1329,6 +1351,11 @@ bwfm_rx_event(struct bwfm_softc *sc, char *buf, size_t len)
 	struct bwfm_event *e = (void *)buf;
 	int s;
 
+	DPRINTF(("%s: buf %p len %lu datalen %u code %u status %u"
+	    " reason %u\n", __func__, buf, len, ntohl(e->msg.datalen),
+	    ntohl(e->msg.event_type), ntohl(e->msg.status),
+	    ntohl(e->msg.reason)));
+
 	if (ntohl(e->msg.event_type) >= BWFM_E_LAST)
 		return;
 
@@ -1383,10 +1410,6 @@ bwfm_rx_event(struct bwfm_softc *sc, char *buf, size_t len)
 		break;
 
 	default:
-		printf("%s: buf %p len %lu datalen %u code %u status %u"
-		    " reason %u\n", __func__, buf, len, ntohl(e->msg.datalen),
-		    ntohl(e->msg.event_type), ntohl(e->msg.status),
-		    ntohl(e->msg.reason));
 		break;
 	}
 }
