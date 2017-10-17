@@ -184,7 +184,8 @@ bwfm_attach(struct bwfm_softc *sc)
 #endif
 	    IEEE80211_C_SHSLOT |		/* short slot time supported */
 	    IEEE80211_C_SHPREAMBLE |		/* short preamble supported */
-	    IEEE80211_C_WPA;			/* 802.11i */
+	    IEEE80211_C_WPA |			/* 802.11i */
+	    IEEE80211_C_WPA_4WAY;		/* WPA 4-way handshake in hw */
 
 	ic->ic_sup_rates[IEEE80211_MODE_11A] = ieee80211_std_rateset_11a;
 	ic->ic_sup_rates[IEEE80211_MODE_11B] = ieee80211_std_rateset_11b;
