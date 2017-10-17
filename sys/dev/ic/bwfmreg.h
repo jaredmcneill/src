@@ -238,7 +238,7 @@ struct bwfm_proto_bcdc_dcmd {
 		uint32_t status;
 	} hdr;
 	char buf[8192];
-} __packed;
+};
 
 struct bwfm_proto_bcdc_hdr {
 	uint8_t flags;
@@ -251,7 +251,7 @@ struct bwfm_proto_bcdc_hdr {
 	uint8_t flags2;
 #define BWFM_BCDC_FLAG2_IF_MASK		0xf
 	uint8_t data_offset;
-} __packed;
+};
 
 #define BWFM_MCSSET_LEN				16
 #define BWFM_MAX_SSID_LEN			32
@@ -280,12 +280,12 @@ struct bwfm_bss_info {
 	uint16_t ie_offset;
 	uint32_t ie_length;
 	uint16_t snr;
-} __packed;
+};
 
 struct bwfm_ssid {
 	uint32_t len;
 	uint8_t ssid[BWFM_MAX_SSID_LEN];
-} __packed;
+};
 
 struct bwfm_scan_params {
 	struct bwfm_ssid ssid;
@@ -299,14 +299,14 @@ struct bwfm_scan_params {
 	uint32_t home_time;
 	uint32_t channel_num;
 	uint16_t channel_list[];
-} __packed;
+};
 
 struct bwfm_scan_results {
 	uint32_t buflen;
 	uint32_t version;
 	uint32_t count;
 	struct bwfm_bss_info bss_info[];
-} __packed;
+};
 
 struct bwfm_escan_params {
 	uint32_t version;
@@ -317,7 +317,7 @@ struct bwfm_escan_params {
 #define WL_ESCAN_ACTION_ABORT		3
 	uint16_t sync_id;
 	struct bwfm_scan_params scan_params;
-} __packed;
+};
 
 struct bwfm_escan_results {
 	uint32_t buflen;
@@ -325,13 +325,13 @@ struct bwfm_escan_results {
 	uint16_t sync_id;
 	uint16_t bss_count;
 	struct bwfm_bss_info bss_info[];
-} __packed;
+};
 
 struct bwfm_assoc_params {
 	uint8_t bssid[ETHER_ADDR_LEN];
 	uint32_t chanspec_num;
 	uint16_t chanspec_list[];
-} __packed;
+};
 
 struct bwfm_join_pref_params {
 	uint8_t type;
@@ -347,12 +347,12 @@ struct bwfm_join_pref_params {
 #define BWFM_JOIN_PREF_BAND_5G		1
 #define BWFM_JOIN_PREF_BAND_2G		2
 #define BWFM_JOIN_PREF_BAND_ALL		3
-} __packed;
+};
 
 struct bwfm_join_params {
 	struct bwfm_ssid ssid;
 	struct bwfm_assoc_params assoc;
-} __packed;
+};
 
 struct bwfm_join_scan_params {
 	uint8_t scan_type;
@@ -360,13 +360,13 @@ struct bwfm_join_scan_params {
 	uint32_t active_time;
 	uint32_t passive_time;
 	uint32_t home_time;
-} __packed;
+};
 
 struct bwfm_ext_join_params {
 	struct bwfm_ssid ssid;
 	struct bwfm_join_scan_params scan;
 	struct bwfm_assoc_params assoc;
-} __packed;
+};
 
 struct bwfm_wsec_pmk {
 	uint16_t key_len;
@@ -374,7 +374,7 @@ struct bwfm_wsec_pmk {
 	uint16_t flags;
 #define BWFM_WSEC_PASSPHRASE		(1 << 0)
 	uint8_t key[2 * BWFM_WSEC_MAX_PSK_LEN + 1];
-} __packed;
+};
 
 /* Event handling */
 enum bwfm_fweh_event_code {
@@ -481,7 +481,7 @@ struct bwfm_ethhdr {
 #define	BWFM_BRCM_OUI			"\x00\x10\x18"
 	uint16_t usr_subtype;
 #define	BWFM_BRCM_SUBTYPE_EVENT		1
-} __packed;
+};
 
 struct bwfm_event_msg {
 	uint16_t version;
@@ -495,11 +495,11 @@ struct bwfm_event_msg {
 	char ifname[IFNAMSIZ];
 	uint8_t ifidx;
 	uint8_t bsscfgidx;
-} __packed;
+};
 
 struct bwfm_event {
 	struct ether_header ehdr;
 #define BWFM_ETHERTYPE_LINK_CTL			0x886c
 	struct bwfm_ethhdr hdr;
 	struct bwfm_event_msg msg;
-} __packed;
+};
