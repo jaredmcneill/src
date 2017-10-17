@@ -62,6 +62,10 @@ int	 bwfm_ioctl(struct ifnet *, u_long, void *);
 int	 bwfm_media_change(struct ifnet *);
 void	 bwfm_media_status(struct ifnet *, struct ifmediareq *);
 
+int	 bwfm_send_mgmt(struct ieee80211com *, struct ieee80211_node *,
+	     int, int);
+void	 bwfm_recv_mgmt(struct ieee80211com *, struct mbuf *,
+	     struct ieee80211_node *, int, int, uint32_t);
 int	 bwfm_newstate(struct ieee80211com *, enum ieee80211_state, int);
 void	 bwfm_newstate_cb(struct bwfm_softc *, struct bwfm_cmd_newstate *);
 void	 bwfm_task(struct work *, void *);
@@ -221,6 +225,8 @@ bwfm_attach(struct bwfm_softc *sc)
 
 	sc->sc_newstate = ic->ic_newstate;
 	ic->ic_newstate = bwfm_newstate;
+	ic->ic_send_mgmt = bwfm_send_mgmt;
+	ic->ic_recv_mgmt = bwfm_recv_mgmt;
 	ieee80211_media_init(ic, bwfm_media_change, bwfm_media_status);
 
 	ieee80211_announce(ic);
@@ -507,6 +513,19 @@ bwfm_ioctl(struct ifnet *ifp, u_long cmd, void *data)
 	splx(s);
 
 	return error;
+}
+
+int
+bwfm_send_mgmt(struct ieee80211com *ic, struct ieee80211_node *ni,
+    int type, int arg)
+{
+	return 0;
+}
+
+void
+bwfm_recv_mgmt(struct ieee80211com *ic, struct mbuf *m0,
+    struct ieee80211_node *ni, int subtype, int rssi, uint32_t rstamp)
+{
 }
 
 int
@@ -1221,7 +1240,6 @@ bwfm_connect(struct bwfm_softc *sc)
 	struct ieee80211com *ic = &sc->sc_ic;
 	struct ieee80211_node *ni = ic->ic_bss;
 	struct ieee80211_crypto_state *cs = &ic->ic_crypto;
-	const struct ieee80211_rsnparms *rsn = &ic->ic_bss->ni_rsn;
 	const struct ieee80211_key *wk;
 	struct bwfm_ext_join_params *params;
 
@@ -1234,44 +1252,50 @@ bwfm_connect(struct bwfm_softc *sc)
 		struct bwfm_wsec_pmk pmk;
 		uint32_t wsec = 0;
 		uint32_t wpa = 0;
-		int i;
+		int i, keyidx;
+		char *pmk_key;
+		uint16_t pmk_keylen;
 
 		if (cs->cs_def_txkey == IEEE80211_KEYIX_NONE) {
-			printf("%s: no WPA PSK available\n", DEVNAME(sc));
+			printf("%s: WPA PMK not available\n", DEVNAME(sc));
 			return;
 		}
-		wk = &cs->cs_nw_keys[cs->cs_def_txkey];
 
 		memset(&pmk, 0, sizeof(pmk));
-		pmk.key_len = htole16(sizeof(wk->wk_keylen) << 1);
 		pmk.flags = htole16(BWFM_WSEC_PASSPHRASE);
-		for (i = 0; i < wk->wk_keylen; i++)
-			snprintf(&pmk.key[2 * i], 3, "%02x",
-			    wk->wk_key[i]);
+		pmk_key = pmk.key;
+		pmk_keylen = 0;
+		for (keyidx = 0; keyidx <= 1; keyidx++) {
+			wk = &cs->cs_nw_keys[keyidx];
+			for (i = 0; i < wk->wk_keylen; i++, pmk_key += 2)
+				snprintf(pmk_key, 3, "%02x", wk->wk_key[i]);
+			pmk_keylen += wk->wk_keylen;
+		}
+		pmk.key_len = htole16(pmk_keylen * 2);
+
 		bwfm_fwvar_cmd_set_data(sc, BWFM_C_SET_WSEC_PMK, &pmk,
 		    sizeof(pmk));
 
-		printf("%s: WPA PMK set to [%s]\n", DEVNAME(sc), pmk.key);
+		DPRINTF(("%s: WPA PMK set to [%s], len %d\n", DEVNAME(sc),
+		    pmk.key, le16toh(pmk.key_len)));
 
-		if (ic->ic_flags & IEEE80211_F_WPA1) {
-			if (rsn->rsn_keymgmtset & WPA_ASE_8021X_PSK)
-				wpa |= BWFM_WPA_AUTH_WPA_PSK;
-			if (rsn->rsn_keymgmtset & WPA_ASE_8021X_UNSPEC)
-				wpa |= BWFM_WPA_AUTH_WPA_UNSPECIFIED;
-		}
-		if (ic->ic_flags & IEEE80211_F_WPA2) {
-			if (rsn->rsn_keymgmtset & WPA_ASE_8021X_PSK)
-				wpa |= BWFM_WPA_AUTH_WPA2_PSK;
-			if (rsn->rsn_keymgmtset & WPA_ASE_8021X_UNSPEC)
-				wpa |= BWFM_WPA_AUTH_WPA2_UNSPECIFIED;
-		}
-		if (rsn->rsn_ucastcipherset & (1<<IEEE80211_CIPHER_AES_CCM))
+		if (ic->ic_flags & IEEE80211_F_WPA1)
+			wpa |= BWFM_WPA_AUTH_WPA_PSK;
+		if (ic->ic_flags & IEEE80211_F_WPA2)
+			wpa |= BWFM_WPA_AUTH_WPA2_PSK;
+
+		wk = &cs->cs_nw_keys[0];
+		switch (wk->wk_cipher->ic_cipher) {
+		case IEEE80211_CIPHER_AES_CCM:
 			wsec |= BWFM_WSEC_AES;
-		if (rsn->rsn_ucastcipherset & (1<<IEEE80211_CIPHER_TKIP))
+			break;
+		case IEEE80211_CIPHER_TKIP:
 			wsec |= BWFM_WSEC_TKIP;
+			break;
+		}
 
-		printf("%s: WPA enabled, ic_flags = 0x%x, rsn keymgmtset = 0x%x, ucastcipherset 0x%x, wpa 0x%x, wsec 0x%x\n", DEVNAME(sc),
-		    ic->ic_flags, rsn->rsn_keymgmtset, rsn->rsn_ucastcipherset, wpa, wsec);
+		DPRINTF(("%s: WPA enabled, ic_flags = 0x%x, wpa 0x%x, wsec 0x%x\n",
+		    DEVNAME(sc), ic->ic_flags, wpa, wsec));
 
 		bwfm_fwvar_var_set_int(sc, "wpa_auth", wpa);
 		bwfm_fwvar_var_set_int(sc, "wsec", wsec);
