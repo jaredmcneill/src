@@ -339,10 +339,10 @@ bwfm_init(struct ifnet *ifp)
 	ENABLE_EVENT(BWFM_E_ASSOC);
 	ENABLE_EVENT(BWFM_E_ESCAN_RESULT);
 	ENABLE_EVENT(BWFM_E_SET_SSID);
+	ENABLE_EVENT(BWFM_E_LINK);
 
 	/* Other events we are curious about */
 	ENABLE_EVENT(BWFM_E_IF);
-	ENABLE_EVENT(BWFM_E_LINK);
 	ENABLE_EVENT(BWFM_E_JOIN);
 	ENABLE_EVENT(BWFM_E_DEAUTH);
 	ENABLE_EVENT(BWFM_E_DEAUTH_IND);
@@ -1407,6 +1407,15 @@ bwfm_rx_event(struct bwfm_softc *sc, char *buf, size_t len)
 		} else {
 			ieee80211_new_state(ic, IEEE80211_S_SCAN, -1);
 		}
+		break;
+
+	case BWFM_E_LINK:
+		if (ntohl(e->msg.status) == BWFM_E_STATUS_SUCCESS &&
+		    ntohl(e->msg.reason) == 0)
+			break;
+		
+		/* Link status has changed */
+		ieee80211_new_state(ic, IEEE80211_S_SCAN, -1);
 		break;
 
 	default:
