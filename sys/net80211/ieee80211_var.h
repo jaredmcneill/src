@@ -278,6 +278,8 @@ extern struct ieee80211com_head ieee80211com_head;
 #define	IEEE80211_C_TKIPMIC	0x00020000	/* CAPABILITY: TKIP MIC avail */
 #define IEEE80211_C_WME_TKIPMIC 0x00040000      /* CAPABILITY: TKIP MIC for QoS
 						   frame */
+#define	IEEE80211_C_WPA_4WAY	0x00080000	/* CAPABILITY: WPA 4-way handshake
+						   done by hardware */
 /* 0x780000 available */
 #define	IEEE80211_C_WPA1	0x00800000	/* CAPABILITY: WPA1 avail */
 #define	IEEE80211_C_WPA2	0x01000000	/* CAPABILITY: WPA2 avail */
