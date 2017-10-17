@@ -1144,6 +1144,36 @@ wpa_driver_bsd_associate(void *priv, struct wpa_driver_associate_params *params)
 	if (wpa_driver_bsd_set_wpa_ie(drv, params->wpa_ie, params->wpa_ie_len) < 0)
 		return -1;
 
+	if ((drv->capa.flags & WPA_DRIVER_FLAGS_4WAY_HANDSHAKE) != 0 && params->psk != NULL) {
+		enum wpa_alg alg = WPA_ALG_NONE;
+
+		switch (params->pairwise_suite) {
+		case WPA_CIPHER_CCMP:
+			alg = WPA_ALG_CCMP;
+			break;
+		case WPA_CIPHER_TKIP:
+			alg = WPA_ALG_TKIP;
+			break;
+		default:
+			switch (params->group_suite) {
+			case WPA_CIPHER_CCMP:
+				alg = WPA_ALG_CCMP;
+				break;
+			case WPA_CIPHER_TKIP:
+				alg = WPA_ALG_TKIP;
+				break;
+			}
+			break;
+		}
+
+		if (bsd_set_key(NULL, priv, alg, NULL, 0, 1,
+				NULL, 0, &params->psk[0], 16) < 0)
+			return -1;
+		if (bsd_set_key(NULL, priv, alg, NULL, 1, 1,
+				NULL, 0, &params->psk[16], 16) < 0)
+			return -1;
+	}
+
 	privacy = !(params->pairwise_suite == WPA_CIPHER_NONE &&
 	    params->group_suite == WPA_CIPHER_NONE &&
 	    params->key_mgmt_suite == WPA_KEY_MGMT_NONE &&
@@ -1564,6 +1594,19 @@ static int wpa_driver_bsd_capa(struct bsd_driver_data *drv)
 	drv->capa.auth = WPA_DRIVER_AUTH_OPEN |
 		WPA_DRIVER_AUTH_SHARED |
 		WPA_DRIVER_AUTH_LEAP;
+
+#ifdef SIOCG80211CAPS
+#define	IEEE80211_C_WPA_4WAY	0x00080000
+	struct ieee80211_caps caps;
+
+	memset(&caps, 0, sizeof(caps));
+	os_strlcpy(caps.i_name, drv->ifname, sizeof(caps.i_name));
+	if (ioctl(drv->global->sock, SIOCG80211CAPS, (caddr_t)&caps) == 0) {
+		if (caps.i_caps & IEEE80211_C_WPA_4WAY)
+			drv->capa.flags |= WPA_DRIVER_FLAGS_4WAY_HANDSHAKE;
+	}
+#endif /* SIOCG80211CAPS */
+
 	return 0;
 }
 
