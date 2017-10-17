@@ -127,6 +127,7 @@ bwfm_attach(struct bwfm_softc *sc)
 	struct ieee80211com *ic = &sc->sc_ic;
 	struct ifnet *ifp = &sc->sc_if;
 	struct bwfm_task *t;
+	uint32_t bandlist[3];
 	uint32_t tmp;
 	int i, error;
 
@@ -187,27 +188,42 @@ bwfm_attach(struct bwfm_softc *sc)
 	    IEEE80211_C_WPA |			/* 802.11i */
 	    IEEE80211_C_WPA_4WAY;		/* WPA 4-way handshake in hw */
 
-	ic->ic_sup_rates[IEEE80211_MODE_11A] = ieee80211_std_rateset_11a;
-	ic->ic_sup_rates[IEEE80211_MODE_11B] = ieee80211_std_rateset_11b;
-	ic->ic_sup_rates[IEEE80211_MODE_11G] = ieee80211_std_rateset_11g;
-
 	/* IBSS channel undefined for now. */
 	ic->ic_ibss_chan = &ic->ic_channels[0];
 
-	for (i = 0; i < __arraycount(bwfm_2ghz_channels); i++) {
-		uint8_t chan = bwfm_2ghz_channels[i];
-		ic->ic_channels[chan].ic_freq =
-		    ieee80211_ieee2mhz(chan, IEEE80211_CHAN_2GHZ);
-		ic->ic_channels[chan].ic_flags =
-		    IEEE80211_CHAN_CCK | IEEE80211_CHAN_OFDM |
-		    IEEE80211_CHAN_DYN | IEEE80211_CHAN_2GHZ;
-	}
-	for (i = 0; i < __arraycount(bwfm_5ghz_channels); i++) {
-		uint8_t chan = bwfm_5ghz_channels[i];
-		ic->ic_channels[chan].ic_freq =
-		    ieee80211_ieee2mhz(chan, IEEE80211_CHAN_5GHZ);
-		ic->ic_channels[chan].ic_flags =
-		    IEEE80211_CHAN_A;
+	if (bwfm_fwvar_cmd_get_data(sc, BWFM_C_GET_BANDLIST, bandlist,
+	    sizeof(bandlist))) {
+		printf("%s: couldn't get supported band list\n", DEVNAME(sc));
+		return;
+	} 
+	const u_int nbands = le32toh(bandlist[0]);
+	for (i = 1; i <= MIN(nbands, __arraycount(bandlist) - 1); i++) {
+		switch (le32toh(bandlist[i])) {
+		case BWFM_BAND_2G:
+			ic->ic_sup_rates[IEEE80211_MODE_11B] = ieee80211_std_rateset_11b;
+			ic->ic_sup_rates[IEEE80211_MODE_11G] = ieee80211_std_rateset_11g;
+
+			for (i = 0; i < __arraycount(bwfm_2ghz_channels); i++) {
+				uint8_t chan = bwfm_2ghz_channels[i];
+				ic->ic_channels[chan].ic_freq =
+				    ieee80211_ieee2mhz(chan, IEEE80211_CHAN_2GHZ);
+				ic->ic_channels[chan].ic_flags =
+				    IEEE80211_CHAN_CCK | IEEE80211_CHAN_OFDM |
+				    IEEE80211_CHAN_DYN | IEEE80211_CHAN_2GHZ;
+			}
+			break;
+		case BWFM_BAND_5G:
+			ic->ic_sup_rates[IEEE80211_MODE_11A] = ieee80211_std_rateset_11a;
+
+			for (i = 0; i < __arraycount(bwfm_5ghz_channels); i++) {
+				uint8_t chan = bwfm_5ghz_channels[i];
+				ic->ic_channels[chan].ic_freq =
+				    ieee80211_ieee2mhz(chan, IEEE80211_CHAN_5GHZ);
+				ic->ic_channels[chan].ic_flags =
+				    IEEE80211_CHAN_A;
+			}
+			break;
+		}
 	}
 
 	ifp->if_softc = sc;

@@ -376,6 +376,9 @@ struct bwfm_wsec_pmk {
 	uint8_t key[2 * BWFM_WSEC_MAX_PSK_LEN + 1];
 };
 
+#define	BWFM_BAND_5G			1
+#define	BWFM_BAND_2G			2
+
 /* Event handling */
 enum bwfm_fweh_event_code {
 	BWFM_E_SET_SSID = 0,
