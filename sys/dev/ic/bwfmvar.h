@@ -51,6 +51,8 @@
 #define BWFM_DEFAULT_SCAN_UNASSOC_TIME	40
 #define BWFM_DEFAULT_SCAN_PASSIVE_TIME	120
 
+#define	BWFM_TASK_COUNT			32
+
 
 struct bwfm_softc;
 
@@ -106,10 +108,31 @@ struct bwfm_proto_ops {
 };
 extern struct bwfm_proto_ops bwfm_proto_bcdc_ops;
 
+enum bwfm_task_cmd {
+	BWFM_TASK_NEWSTATE,
+};
+
+struct bwfm_cmd_newstate {
+	enum ieee80211_state	 state;
+	int			 arg;
+};
+
+struct bwfm_task {
+	struct work		 t_work;
+	struct bwfm_softc	*t_sc;
+	enum bwfm_task_cmd	 t_cmd;
+	union {
+		struct bwfm_cmd_newstate	newstate;
+	} t_u;
+#define	t_newstate	t_u.newstate
+};
+
 struct bwfm_softc {
-	struct device		 sc_dev;
+	device_t		 sc_dev;
 	struct ieee80211com	 sc_ic;
-	struct ifmedia		 sc_media;
+	struct ethercom		 sc_ec;
+#define	sc_if			 sc_ec.ec_if
+
 	struct bwfm_bus_ops	*sc_bus_ops;
 	struct bwfm_buscore_ops	*sc_buscore_ops;
 	struct bwfm_proto_ops	*sc_proto_ops;
@@ -119,6 +142,14 @@ struct bwfm_softc {
 #define		BWFM_IO_TYPE_D11AC		2
 
 	int			 sc_tx_timer;
+
+	bool			 sc_if_attached;
+	struct bwfm_task	 sc_task[BWFM_TASK_COUNT];
+	pcq_t			*sc_freetask;
+	struct workqueue	*sc_taskq;
+
+	int			(*sc_newstate)(struct ieee80211com *,
+				    enum ieee80211_state, int);
 };
 
 void bwfm_attach(struct bwfm_softc *);
