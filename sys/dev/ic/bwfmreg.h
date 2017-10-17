@@ -502,4 +502,4 @@ struct bwfm_event {
 #define BWFM_ETHERTYPE_LINK_CTL			0x886c
 	struct bwfm_ethhdr hdr;
 	struct bwfm_event_msg msg;
-};
+} __packed;
