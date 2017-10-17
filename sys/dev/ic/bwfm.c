@@ -168,6 +168,10 @@ bwfm_attach(struct bwfm_softc *sc)
 	ic->ic_state = IEEE80211_S_INIT;
 
 	ic->ic_caps =
+	    IEEE80211_C_WEP |
+	    IEEE80211_C_TKIP |
+	    IEEE80211_C_AES |
+	    IEEE80211_C_AES_CCM |
 #if notyet
 	    IEEE80211_C_MONITOR |		/* monitor mode suported */
 	    IEEE80211_C_IBSS |
@@ -1216,50 +1220,58 @@ bwfm_connect(struct bwfm_softc *sc)
 {
 	struct ieee80211com *ic = &sc->sc_ic;
 	struct ieee80211_node *ni = ic->ic_bss;
+	struct ieee80211_crypto_state *cs = &ic->ic_crypto;
+	const struct ieee80211_rsnparms *rsn = &ic->ic_bss->ni_rsn;
+	const struct ieee80211_key *wk;
 	struct bwfm_ext_join_params *params;
 
-#if notyet
 	/*
 	 * OPEN: Open or WPA/WPA2 on newer Chips/Firmware.
 	 * SHARED KEY: WEP.
 	 * AUTO: Automatic, probably for older Chips/Firmware.
 	 */
-	if (ic->ic_flags & IEEE80211_F_PSK) {
+	if (ic->ic_flags & IEEE80211_F_WPA) {
 		struct bwfm_wsec_pmk pmk;
 		uint32_t wsec = 0;
 		uint32_t wpa = 0;
 		int i;
 
-		pmk.key_len = htole16(sizeof(ic->ic_psk) << 1);
+		if (cs->cs_def_txkey == IEEE80211_KEYIX_NONE) {
+			printf("%s: no WPA PSK available\n", DEVNAME(sc));
+			return;
+		}
+		wk = &cs->cs_nw_keys[cs->cs_def_txkey];
+
+		memset(&pmk, 0, sizeof(pmk));
+		pmk.key_len = htole16(sizeof(wk->wk_keylen) << 1);
 		pmk.flags = htole16(BWFM_WSEC_PASSPHRASE);
-		for (i = 0; i < 32; i++)
+		for (i = 0; i < wk->wk_keylen; i++)
 			snprintf(&pmk.key[2 * i], 3, "%02x",
-			    ic->ic_psk[i]);
+			    wk->wk_key[i]);
 		bwfm_fwvar_cmd_set_data(sc, BWFM_C_SET_WSEC_PMK, &pmk,
 		    sizeof(pmk));
 
-		if (ic->ic_rsnprotos & IEEE80211_PROTO_WPA) {
-			if (ic->ic_rsnakms & IEEE80211_AKM_PSK)
+		printf("%s: WPA PMK set to [%s]\n", DEVNAME(sc), pmk.key);
+
+		if (ic->ic_flags & IEEE80211_F_WPA1) {
+			if (rsn->rsn_keymgmtset & WPA_ASE_8021X_PSK)
 				wpa |= BWFM_WPA_AUTH_WPA_PSK;
-			if (ic->ic_rsnakms & IEEE80211_AKM_8021X)
+			if (rsn->rsn_keymgmtset & WPA_ASE_8021X_UNSPEC)
 				wpa |= BWFM_WPA_AUTH_WPA_UNSPECIFIED;
 		}
-		if (ic->ic_rsnprotos & IEEE80211_PROTO_RSN) {
-			if (ic->ic_rsnakms & IEEE80211_AKM_PSK)
+		if (ic->ic_flags & IEEE80211_F_WPA2) {
+			if (rsn->rsn_keymgmtset & WPA_ASE_8021X_PSK)
 				wpa |= BWFM_WPA_AUTH_WPA2_PSK;
-			if (ic->ic_rsnakms & IEEE80211_AKM_SHA256_PSK)
-				wpa |= BWFM_WPA_AUTH_WPA2_PSK_SHA256;
-			if (ic->ic_rsnakms & IEEE80211_AKM_8021X)
+			if (rsn->rsn_keymgmtset & WPA_ASE_8021X_UNSPEC)
 				wpa |= BWFM_WPA_AUTH_WPA2_UNSPECIFIED;
-			if (ic->ic_rsnakms & IEEE80211_AKM_SHA256_8021X)
-				wpa |= BWFM_WPA_AUTH_WPA2_1X_SHA256;
 		}
-		if (ic->ic_rsnciphers & IEEE80211_WPA_CIPHER_TKIP ||
-		    ic->ic_rsngroupcipher & IEEE80211_WPA_CIPHER_TKIP)
-			wsec |= BWFM_WSEC_TKIP;
-		if (ic->ic_rsnciphers & IEEE80211_WPA_CIPHER_CCMP ||
-		    ic->ic_rsngroupcipher & IEEE80211_WPA_CIPHER_CCMP)
+		if (rsn->rsn_ucastcipherset & (1<<IEEE80211_CIPHER_AES_CCM))
 			wsec |= BWFM_WSEC_AES;
+		if (rsn->rsn_ucastcipherset & (1<<IEEE80211_CIPHER_TKIP))
+			wsec |= BWFM_WSEC_TKIP;
+
+		printf("%s: WPA enabled, ic_flags = 0x%x, rsn keymgmtset = 0x%x, ucastcipherset 0x%x, wpa 0x%x, wsec 0x%x\n", DEVNAME(sc),
+		    ic->ic_flags, rsn->rsn_keymgmtset, rsn->rsn_ucastcipherset, wpa, wsec);
 
 		bwfm_fwvar_var_set_int(sc, "wpa_auth", wpa);
 		bwfm_fwvar_var_set_int(sc, "wsec", wsec);
@@ -1267,10 +1279,7 @@ bwfm_connect(struct bwfm_softc *sc)
 		bwfm_fwvar_var_set_int(sc, "wpa_auth", BWFM_WPA_AUTH_DISABLED);
 		bwfm_fwvar_var_set_int(sc, "wsec", BWFM_WSEC_NONE);
 	}
-#else
-	bwfm_fwvar_var_set_int(sc, "wpa_auth", BWFM_WPA_AUTH_DISABLED);
-	bwfm_fwvar_var_set_int(sc, "wsec", BWFM_WSEC_NONE);
-#endif
+
 	bwfm_fwvar_var_set_int(sc, "auth", BWFM_AUTH_OPEN);
 	bwfm_fwvar_var_set_int(sc, "mfp", BWFM_MFP_NONE);
 
