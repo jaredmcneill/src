@@ -2595,6 +2595,7 @@ ieee80211_ioctl(struct ieee80211com *ic, u_long cmd, void *data)
 	struct ieee80211_bssid *bssid;
 	struct ieee80211chanreq *chanreq;
 	struct ieee80211_channel *chan;
+	struct ieee80211_caps *caps;
 	uint32_t oflags;
 #ifdef COMPAT_20
 	struct ieee80211_ostats ostats;
@@ -2898,6 +2899,11 @@ ieee80211_ioctl(struct ieee80211com *ic, u_long cmd, void *data)
 		if (error == 0 && cmd == SIOCG80211ZSTATS)
 			(void)memset(&ic->ic_stats, 0, sizeof(ic->ic_stats));
 		splx(s);
+		break;
+	case SIOCG80211CAPS:
+		caps = (struct ieee80211_caps *)data;
+		caps->i_caps = ic->ic_caps;
+		error = 0;
 		break;
 	case SIOCSIFMTU:
 		ifr = (struct ifreq *)data;

@@ -607,6 +607,13 @@ struct ieee80211_bssid {
 #define	SIOCS80211BSSID		 _IOW('i', 240, struct ieee80211_bssid)
 #define	SIOCG80211BSSID		_IOWR('i', 241, struct ieee80211_bssid)
 
+struct ieee80211_caps {
+	char		i_name[IFNAMSIZ];	/* if_name, e.g. "wi0" */
+	u_int32_t	i_caps;
+};
+
+#define	SIOCG80211CAPS		_IOWR('i', 242, struct ieee80211_caps)
+
 #endif
 
 #endif /* !_NET80211_IEEE80211_IOCTL_H_ */
