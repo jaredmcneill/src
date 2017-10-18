@@ -1389,12 +1389,14 @@ bwfm_rx(struct bwfm_softc *sc, char *buf, size_t len)
 
 	s = splnet();
 
-	mb = mtod(m, char *);
-	memcpy(mb, buf, len);
-	m->m_pkthdr.len = m->m_len = len;
-	m_set_rcvif(m, ifp);
+	if ((ifp->if_flags & IFF_RUNNING) != 0) {
+		mb = mtod(m, char *);
+		memcpy(mb, buf, len);
+		m->m_pkthdr.len = m->m_len = len;
+		m_set_rcvif(m, ifp);
 
-	if_percpuq_enqueue(ifp->if_percpuq, m);
+		if_percpuq_enqueue(ifp->if_percpuq, m);
+	}
 
 	splx(s);
 }
