@@ -127,6 +127,7 @@ bwfm_attach(struct bwfm_softc *sc)
 	struct ieee80211com *ic = &sc->sc_ic;
 	struct ifnet *ifp = &sc->sc_if;
 	struct bwfm_task *t;
+	char fw_version[BWFM_DCMD_SMLEN];
 	uint32_t bandlist[3];
 	uint32_t tmp;
 	int i, error;
@@ -154,6 +155,10 @@ bwfm_attach(struct bwfm_softc *sc)
 		printf("%s: could not read mac address\n", DEVNAME(sc));
 		return;
 	}
+
+	memset(fw_version, 0, sizeof(fw_version));
+	if (bwfm_fwvar_var_get_data(sc, "ver", fw_version, sizeof(fw_version)) == 0)
+		printf("%s: %s", DEVNAME(sc), fw_version);
 	printf("%s: address %s\n", DEVNAME(sc), ether_sprintf(ic->ic_myaddr));
 
 	/*

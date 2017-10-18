@@ -223,6 +223,11 @@
 #define BWFM_C_SET_VAR				263
 #define BWFM_C_SET_WSEC_PMK			268
 
+/* Small, medium, and maximum buffer size for dcmd */
+#define	BWFM_DCMD_SMLEN				256
+#define	BWFM_DCMD_MEDLEN			1536
+#define	BWFM_DCMD_MAXLEN			8192
+
 struct bwfm_proto_bcdc_dcmd {
 	struct {
 		uint32_t cmd;
