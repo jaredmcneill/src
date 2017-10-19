@@ -110,11 +110,18 @@ extern struct bwfm_proto_ops bwfm_proto_bcdc_ops;
 
 enum bwfm_task_cmd {
 	BWFM_TASK_NEWSTATE,
+	BWFM_TASK_KEY_SET,
+	BWFM_TASK_KEY_DELETE,
 };
 
 struct bwfm_cmd_newstate {
 	enum ieee80211_state	 state;
 	int			 arg;
+};
+
+struct bwfm_cmd_key {
+	const struct ieee80211_key *key;
+	uint8_t			 mac[IEEE80211_ADDR_LEN];
 };
 
 struct bwfm_task {
@@ -123,8 +130,10 @@ struct bwfm_task {
 	enum bwfm_task_cmd	 t_cmd;
 	union {
 		struct bwfm_cmd_newstate	newstate;
+		struct bwfm_cmd_key		key;
 	} t_u;
 #define	t_newstate	t_u.newstate
+#define	t_key		t_u.key
 };
 
 struct bwfm_softc {

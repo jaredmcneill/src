@@ -66,6 +66,9 @@ int	 bwfm_send_mgmt(struct ieee80211com *, struct ieee80211_node *,
 	     int, int);
 void	 bwfm_recv_mgmt(struct ieee80211com *, struct mbuf *,
 	     struct ieee80211_node *, int, int, uint32_t);
+int	 bwfm_key_set(struct ieee80211com *, const struct ieee80211_key *,
+	     const uint8_t *);
+int	 bwfm_key_delete(struct ieee80211com *, const struct ieee80211_key *);
 int	 bwfm_newstate(struct ieee80211com *, enum ieee80211_state, int);
 void	 bwfm_newstate_cb(struct bwfm_softc *, struct bwfm_cmd_newstate *);
 void	 bwfm_task(struct work *, void *);
@@ -161,17 +164,6 @@ bwfm_attach(struct bwfm_softc *sc)
 		printf("%s: %s", DEVNAME(sc), fw_version);
 	printf("%s: address %s\n", DEVNAME(sc), ether_sprintf(ic->ic_myaddr));
 
-	/*
-	 * This hardware is supposed to be run with wpa_supplicant, but since
-	 * we want to handle basic authentication in our stack, we _need_ to
-	 * rely on the firmware's handshake algorithm.  If it doesn't exist we
-	 * will have to think about something new.
-	 */
-	if (bwfm_fwvar_var_get_int(sc, "sup_wpa", &tmp)) {
-		printf("%s: no supplicant in firmware, bailing\n", DEVNAME(sc));
-		return;
-	}
-
 	ic->ic_ifp = ifp;
 	ic->ic_phytype = IEEE80211_T_OFDM;
 	ic->ic_opmode = IEEE80211_M_STA;
@@ -191,7 +183,7 @@ bwfm_attach(struct bwfm_softc *sc)
 	    IEEE80211_C_SHSLOT |		/* short slot time supported */
 	    IEEE80211_C_SHPREAMBLE |		/* short preamble supported */
 	    IEEE80211_C_WPA |			/* 802.11i */
-	    IEEE80211_C_WPA_4WAY;		/* WPA 4-way handshake in hw */
+	    /* IEEE80211_C_WPA_4WAY */0;		/* WPA 4-way handshake in hw */
 
 	/* IBSS channel undefined for now. */
 	ic->ic_ibss_chan = &ic->ic_channels[0];
@@ -243,12 +235,15 @@ bwfm_attach(struct bwfm_softc *sc)
 	if_initialize(ifp);
 	ieee80211_ifattach(ic);
 	ifp->if_percpuq = if_percpuq_create(ifp);
+	if_deferred_start_init(ifp, NULL);
 	if_register(ifp);
 
 	sc->sc_newstate = ic->ic_newstate;
 	ic->ic_newstate = bwfm_newstate;
 	ic->ic_send_mgmt = bwfm_send_mgmt;
 	ic->ic_recv_mgmt = bwfm_recv_mgmt;
+	ic->ic_crypto.cs_key_set = bwfm_key_set;
+	ic->ic_crypto.cs_key_delete = bwfm_key_delete;
 	ieee80211_media_init(ic, bwfm_media_change, bwfm_media_status);
 
 	ieee80211_announce(ic);
@@ -366,26 +361,13 @@ bwfm_init(struct ifnet *ifp)
 	}
 
 	memset(evmask, 0, sizeof(evmask));
+
 #define	ENABLE_EVENT(e)		evmask[(e) / 8] |= 1 << ((e) % 8)
 	/* Events used to drive the state machine */
 	ENABLE_EVENT(BWFM_E_ASSOC);
 	ENABLE_EVENT(BWFM_E_ESCAN_RESULT);
 	ENABLE_EVENT(BWFM_E_SET_SSID);
 	ENABLE_EVENT(BWFM_E_LINK);
-
-	/* Other events we are curious about */
-	ENABLE_EVENT(BWFM_E_IF);
-	ENABLE_EVENT(BWFM_E_JOIN);
-	ENABLE_EVENT(BWFM_E_DEAUTH);
-	ENABLE_EVENT(BWFM_E_DEAUTH_IND);
-	ENABLE_EVENT(BWFM_E_AUTH);
-	ENABLE_EVENT(BWFM_E_AUTH_IND);
-	ENABLE_EVENT(BWFM_E_ASSOC);
-	ENABLE_EVENT(BWFM_E_ASSOC_IND);
-	ENABLE_EVENT(BWFM_E_REASSOC_IND);
-	ENABLE_EVENT(BWFM_E_DISASSOC_IND);
-	ENABLE_EVENT(BWFM_E_PSK_SUP);
-	ENABLE_EVENT(BWFM_E_ASSOC_START);
 #undef	ENABLE_EVENT
 
 #ifdef BWFM_DEBUG
@@ -430,11 +412,10 @@ bwfm_init(struct ifnet *ifp)
 	bwfm_fwvar_var_set_int(sc, "toe", 0);
 
 	/*
-	 * Use the firmware supplicant to handle the WPA handshake.
-	 * As long as we're still figuring things out this is ok, but
-	 * it would be better to handle the handshake in our stack.
+	 * Tell the firmware supplicant that we are going to handle the
+	 * WPA handshake ourselves.
 	 */
-	bwfm_fwvar_var_set_int(sc, "sup_wpa", 1);
+	bwfm_fwvar_var_set_int(sc, "sup_wpa", 0);
 
 	ifp->if_flags |= IFF_RUNNING;
 	ifp->if_flags &= ~IFF_OACTIVE;
@@ -551,6 +532,132 @@ bwfm_recv_mgmt(struct ieee80211com *ic, struct mbuf *m0,
 }
 
 int
+bwfm_key_set(struct ieee80211com *ic, const struct ieee80211_key *wk,
+    const uint8_t mac[IEEE80211_ADDR_LEN])
+{
+	struct bwfm_softc *sc = ic->ic_ifp->if_softc;
+	struct bwfm_task *t;
+
+	t = pcq_get(sc->sc_freetask);
+	if (t == NULL) {
+		printf("%s: no free tasks\n", DEVNAME(sc));
+		return 0;
+	}
+
+	t->t_cmd = BWFM_TASK_KEY_SET;
+	t->t_key.key = wk;
+	memcpy(t->t_key.mac, mac, sizeof(t->t_key.mac));
+	workqueue_enqueue(sc->sc_taskq, (struct work *)t, NULL);
+	return 1;
+}
+
+static void
+bwfm_key_set_cb(struct bwfm_softc *sc, struct bwfm_cmd_key *ck)
+{
+	const struct ieee80211_key *wk = ck->key;
+	const uint8_t *mac = ck->mac;
+	struct bwfm_wsec_key wsec_key;
+	uint32_t wsec_enable, wsec;
+	bool ext_key;
+
+#ifdef BWFM_DEBUG
+	printf("key_set: key cipher %s len %d: ", wk->wk_cipher->ic_name, wk->wk_keylen);
+	for (int j = 0; j < sizeof(wk->wk_key); j++)
+		printf("%02x", wk->wk_key[j]);
+#endif
+
+	if ((wk->wk_flags & IEEE80211_KEY_GROUP) == 0 &&
+	    wk->wk_cipher->ic_cipher != IEEE80211_CIPHER_WEP) {
+		ext_key = true;
+	} else {
+		ext_key = false;
+	}
+
+#ifdef BWFM_DEBUG
+	printf(", ext_key = %d", ext_key);
+	printf(", mac = %02x:%02x:%02x:%02x:%02x:%02x",
+	    mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+	printf("\n");
+#endif
+
+	memset(&wsec_key, 0, sizeof(wsec_key));
+	if (ext_key && !IEEE80211_IS_MULTICAST(mac))
+		memcpy(wsec_key.ea, mac, sizeof(wsec_key.ea));
+	wsec_key.index = htole32(wk->wk_keyix);
+	wsec_key.len = htole32(wk->wk_keylen);
+	memcpy(wsec_key.data, wk->wk_key, sizeof(wsec_key.data));
+	if (!ext_key)
+		wsec_key.flags = htole32(BWFM_PRIMARY_KEY);
+
+	switch (wk->wk_cipher->ic_cipher) {
+	case IEEE80211_CIPHER_WEP:
+		if (wk->wk_keylen == 5)
+			wsec_key.algo = htole32(BWFM_CRYPTO_ALGO_WEP1);
+		else if (wk->wk_keylen == 13)
+			wsec_key.algo = htole32(BWFM_CRYPTO_ALGO_WEP128);
+		else
+			return;
+		wsec_enable = BWFM_WSEC_WEP;
+		break;
+	case IEEE80211_CIPHER_TKIP:
+		wsec_key.algo = htole32(BWFM_CRYPTO_ALGO_TKIP);
+		wsec_enable = BWFM_WSEC_TKIP;
+		break;
+	case IEEE80211_CIPHER_AES_CCM:
+		wsec_key.algo = htole32(BWFM_CRYPTO_ALGO_AES_CCM);
+		wsec_enable = BWFM_WSEC_AES;
+		break;
+	default:
+		printf("%s: %s: cipher %s not supported\n", DEVNAME(sc),
+		    __func__, wk->wk_cipher->ic_name);
+		return;
+	}
+
+	if (bwfm_fwvar_var_set_data(sc, "wsec_key", &wsec_key, sizeof(wsec_key)))
+		return;
+
+	bwfm_fwvar_var_set_int(sc, "wpa_auth", BWFM_WPA_AUTH_WPA2_PSK);
+
+	bwfm_fwvar_var_get_int(sc, "wsec", &wsec);
+	wsec |= wsec_enable;
+	bwfm_fwvar_var_set_int(sc, "wsec", wsec);
+}
+
+int
+bwfm_key_delete(struct ieee80211com *ic, const struct ieee80211_key *wk)
+{
+	struct bwfm_softc *sc = ic->ic_ifp->if_softc;
+	struct bwfm_task *t;
+
+	t = pcq_get(sc->sc_freetask);
+	if (t == NULL) {
+		printf("%s: no free tasks\n", DEVNAME(sc));
+		return 0;
+	}
+
+	t->t_cmd = BWFM_TASK_KEY_DELETE;
+	t->t_key.key = wk;
+	memset(t->t_key.mac, 0, sizeof(t->t_key.mac));
+	workqueue_enqueue(sc->sc_taskq, (struct work *)t, NULL);
+
+	return 1;
+}
+
+static void
+bwfm_key_delete_cb(struct bwfm_softc *sc, struct bwfm_cmd_key *ck)
+{
+	const struct ieee80211_key *wk = ck->key;
+	struct bwfm_wsec_key wsec_key;
+
+	memset(&wsec_key, 0, sizeof(wsec_key));
+	wsec_key.index = htole32(wk->wk_keyix);
+	wsec_key.flags = htole32(BWFM_PRIMARY_KEY);
+
+	if (bwfm_fwvar_var_set_data(sc, "wsec_key", &wsec_key, sizeof(wsec_key)))
+		return;
+}
+
+int
 bwfm_newstate(struct ieee80211com *ic, enum ieee80211_state nstate, int arg)
 {
 	struct bwfm_softc *sc = ic->ic_ifp->if_softc;
@@ -618,6 +725,12 @@ bwfm_task(struct work *wk, void *arg)
 	switch (t->t_cmd) {
 	case BWFM_TASK_NEWSTATE:
 		bwfm_newstate_cb(sc, &t->t_newstate);
+		break;
+	case BWFM_TASK_KEY_SET:
+		bwfm_key_set_cb(sc, &t->t_key);
+		break;
+	case BWFM_TASK_KEY_DELETE:
+		bwfm_key_delete_cb(sc, &t->t_key);
 		break;
 	default:
 		panic("bwfm: unknown task command %d", t->t_cmd);
@@ -1256,65 +1369,82 @@ bwfm_scan(struct bwfm_softc *sc)
 	kmem_free(params, params_size);
 }
 
+static __inline int
+bwfm_iswpaoui(const uint8_t *frm)
+{
+	return frm[1] > 3 && le32dec(frm+2) == ((WPA_OUI_TYPE<<24)|WPA_OUI);
+}
+
+/*
+ * Derive wireless security settings from WPA/RSN IE.
+ */
+static uint32_t
+bwfm_get_wsec(struct bwfm_softc *sc)
+{
+	struct ieee80211com *ic = &sc->sc_ic;
+	uint8_t *wpa = ic->ic_opt_ie;
+
+	KASSERT(ic->ic_opt_ie_len > 0);
+
+	if (wpa[0] != IEEE80211_ELEMID_RSN) {
+		if (ic->ic_opt_ie_len < 12)
+			return BWFM_WSEC_NONE;
+
+		/* non-RSN IE, expect that we are doing WPA1 */
+		if ((ic->ic_flags & IEEE80211_F_WPA1) == 0)
+			return BWFM_WSEC_NONE;
+
+		/* Must contain WPA OUI */
+		if (!bwfm_iswpaoui(wpa))
+			return BWFM_WSEC_NONE;
+
+		switch (le32dec(wpa + 8)) {
+		case ((WPA_CSE_TKIP<<24)|WPA_OUI):
+			return BWFM_WSEC_TKIP;
+		case ((WPA_CSE_CCMP<<24)|WPA_OUI):
+			return BWFM_WSEC_AES;
+		default:
+			return BWFM_WSEC_NONE;
+		}
+	} else {
+		if (ic->ic_opt_ie_len < 14)
+			return BWFM_WSEC_NONE;
+
+		/* RSN IE, expect that we are doing WPA2 */
+		if ((ic->ic_flags & IEEE80211_F_WPA2) == 0)
+			return BWFM_WSEC_NONE;
+
+		switch (le32dec(wpa + 10)) {
+		case ((RSN_CSE_TKIP<<24)|RSN_OUI):
+			return BWFM_WSEC_TKIP;
+		case ((RSN_CSE_CCMP<<24)|RSN_OUI):
+			return BWFM_WSEC_AES;
+		default:
+			return BWFM_WSEC_NONE;
+		}
+	}
+}
+
 void
 bwfm_connect(struct bwfm_softc *sc)
 {
 	struct ieee80211com *ic = &sc->sc_ic;
 	struct ieee80211_node *ni = ic->ic_bss;
-	struct ieee80211_crypto_state *cs = &ic->ic_crypto;
-	const struct ieee80211_key *wk;
 	struct bwfm_ext_join_params *params;
 
-	/*
-	 * OPEN: Open or WPA/WPA2 on newer Chips/Firmware.
-	 * SHARED KEY: WEP.
-	 * AUTO: Automatic, probably for older Chips/Firmware.
-	 */
 	if (ic->ic_flags & IEEE80211_F_WPA) {
-		struct bwfm_wsec_pmk pmk;
 		uint32_t wsec = 0;
 		uint32_t wpa = 0;
-		int i, keyidx;
-		char *pmk_key;
-		uint16_t pmk_keylen;
 
-		if (cs->cs_def_txkey == IEEE80211_KEYIX_NONE) {
-			printf("%s: WPA PMK not available\n", DEVNAME(sc));
-			return;
-		}
-
-		memset(&pmk, 0, sizeof(pmk));
-		pmk.flags = htole16(BWFM_WSEC_PASSPHRASE);
-		pmk_key = pmk.key;
-		pmk_keylen = 0;
-		for (keyidx = 0; keyidx <= 1; keyidx++) {
-			wk = &cs->cs_nw_keys[keyidx];
-			for (i = 0; i < wk->wk_keylen; i++, pmk_key += 2)
-				snprintf(pmk_key, 3, "%02x", wk->wk_key[i]);
-			pmk_keylen += wk->wk_keylen;
-		}
-		pmk.key_len = htole16(pmk_keylen * 2);
-
-		bwfm_fwvar_cmd_set_data(sc, BWFM_C_SET_WSEC_PMK, &pmk,
-		    sizeof(pmk));
-
-		DPRINTF(("%s: WPA PMK set to [%s], len %d\n", DEVNAME(sc),
-		    pmk.key, le16toh(pmk.key_len)));
+		if (ic->ic_opt_ie_len)
+			bwfm_fwvar_var_set_data(sc, "wpaie", ic->ic_opt_ie, ic->ic_opt_ie_len);
 
 		if (ic->ic_flags & IEEE80211_F_WPA1)
 			wpa |= BWFM_WPA_AUTH_WPA_PSK;
 		if (ic->ic_flags & IEEE80211_F_WPA2)
 			wpa |= BWFM_WPA_AUTH_WPA2_PSK;
 
-		wk = &cs->cs_nw_keys[0];
-		switch (wk->wk_cipher->ic_cipher) {
-		case IEEE80211_CIPHER_AES_CCM:
-			wsec |= BWFM_WSEC_AES;
-			break;
-		case IEEE80211_CIPHER_TKIP:
-			wsec |= BWFM_WSEC_TKIP;
-			break;
-		}
+		wsec |= bwfm_get_wsec(sc);
 
 		DPRINTF(("%s: WPA enabled, ic_flags = 0x%x, wpa 0x%x, wsec 0x%x\n",
 		    DEVNAME(sc), ic->ic_flags, wpa, wsec));
@@ -1353,7 +1483,9 @@ bwfm_connect(struct bwfm_softc *sc)
 
 	/* XXX: added for testing only, remove */
 	bwfm_fwvar_var_set_int(sc, "allmulti", 1);
+#if 0
 	bwfm_fwvar_cmd_set_int(sc, BWFM_C_SET_PROMISC, 1);
+#endif
 }
 
 void
@@ -1374,7 +1506,7 @@ bwfm_rx(struct bwfm_softc *sc, char *buf, size_t len)
 	    ntohs(e->hdr.usr_subtype) == BWFM_BRCM_SUBTYPE_EVENT)
 		bwfm_rx_event(sc, buf, len);
 
-	if (__predict_false(len > MCLBYTES))
+	if (__predict_false(len > MCLBYTES || len == 0))
 		return;
 	MGETHDR(m, M_DONTWAIT, MT_DATA);
 	if (__predict_false(m == NULL))
@@ -1480,12 +1612,6 @@ bwfm_rx_event(struct bwfm_softc *sc, char *buf, size_t len)
 	}
 }
 
-static __inline int
-iswpaoui(const uint8_t *frm)
-{
-	return frm[1] > 3 && le32dec(frm+2) == ((WPA_OUI_TYPE<<24)|WPA_OUI);
-}
-
 void
 bwfm_scan_node(struct bwfm_softc *sc, struct bwfm_bss_info *bss, size_t len)
 {
@@ -1563,7 +1689,7 @@ bwfm_scan_node(struct bwfm_softc *sc, struct bwfm_bss_info *bss, size_t len)
 			scan.wpa = frm;
 			break;
 		case IEEE80211_ELEMID_VENDOR:
-			if (iswpaoui(frm))
+			if (bwfm_iswpaoui(frm))
 				scan.wpa = frm;
 			break;
 		}

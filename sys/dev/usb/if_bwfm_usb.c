@@ -25,6 +25,7 @@
 #include <sys/device.h>
 #include <sys/queue.h>
 #include <sys/socket.h>
+#include <sys/mutex.h>
 #include <sys/workqueue.h>
 #include <sys/pcq.h>
 
@@ -179,6 +180,9 @@ struct bwfm_usb_softc {
 	struct bwfm_usb_rx_data	 sc_rx_data[BWFM_RX_LIST_COUNT];
 	struct bwfm_usb_tx_data	 sc_tx_data[BWFM_TX_LIST_COUNT];
 	TAILQ_HEAD(, bwfm_usb_tx_data) sc_tx_free_list;
+
+	kmutex_t		 sc_rx_lock;
+	kmutex_t		 sc_tx_lock;
 };
 
 int		 bwfm_usb_match(device_t, cfdata_t, void *);
@@ -235,6 +239,8 @@ bwfm_usb_attach(device_t parent, device_t self, void *aux)
 
 	sc->sc_sc.sc_dev = self;
 	sc->sc_udev = uaa->uaa_device;
+	mutex_init(&sc->sc_rx_lock, MUTEX_DEFAULT, IPL_NET);
+	mutex_init(&sc->sc_tx_lock, MUTEX_DEFAULT, IPL_NET);
 
 	aprint_naive("\n");
 
@@ -414,6 +420,8 @@ bwfm_usb_attachhook(device_t self)
 		return;
 	}
 
+	bwfm_attach(&sc->sc_sc);
+
 	for (i = 0; i < BWFM_RX_LIST_COUNT; i++) {
 		data = &sc->sc_rx_data[i];
 
@@ -425,8 +433,6 @@ bwfm_usb_attachhook(device_t self)
 			printf("%s: could not set up new transfer: %s\n",
 			    DEVNAME(sc), usbd_errstr(error));
 	}
-
-	bwfm_attach(&sc->sc_sc);
 }
 
 void
@@ -452,21 +458,22 @@ bwfm_usb_rxeof(struct usbd_xfer *xfer, void *priv, usbd_status status)
 	off = 0;
 	hdr = (void *)data->buf;
 	if (len < sizeof(*hdr))
-		return;
+		goto resubmit;
 	len -= sizeof(*hdr);
 	off += sizeof(*hdr);
 	if (len < hdr->data_offset << 2)
-		return;
+		goto resubmit;
 	len -= hdr->data_offset << 2;
 	off += hdr->data_offset << 2;
 
+	mutex_enter(&sc->sc_rx_lock);
 	bwfm_rx(&sc->sc_sc, &data->buf[off], len);
+	mutex_exit(&sc->sc_rx_lock);
 
+resubmit:
 	usbd_setup_xfer(data->xfer, data, data->buf,
 	    BWFM_RXBUFSZ, USBD_SHORT_XFER_OK, USBD_NO_TIMEOUT,
 	    bwfm_usb_rxeof);
-
-resubmit:
 	error = usbd_transfer(data->xfer);
 	if (error != 0 && error != USBD_IN_PROGRESS)
 		printf("%s: could not set up new transfer: %s\n",
@@ -564,13 +571,15 @@ bwfm_usb_txeof(struct usbd_xfer *xfer, void *priv, usbd_status status)
 	DPRINTFN(2, ("%s: %s status %s\n", DEVNAME(sc), __func__,
 	    usbd_errstr(status)));
 
-	s = splnet();
-
 	m_freem(data->mbuf);
 	data->mbuf = NULL;
 
+	mutex_enter(&sc->sc_tx_lock);
 	/* Put this Tx buffer back to our free list. */
 	TAILQ_INSERT_TAIL(&sc->sc_tx_free_list, data, next);
+	mutex_exit(&sc->sc_tx_lock);
+
+	s = splnet();
 
 	if (__predict_false(status != USBD_NORMAL_COMPLETION)) {
 		if (status == USBD_CANCELLED)
@@ -580,12 +589,13 @@ bwfm_usb_txeof(struct usbd_xfer *xfer, void *priv, usbd_status status)
 		return;
 	}
 
+	ifp->if_opackets++;
+
 	/* We just released a Tx buffer, notify Tx. */
 	if ((ifp->if_flags & IFF_OACTIVE) != 0) {
 		ifp->if_flags &= ~IFF_OACTIVE;
 		if_schedule_deferred_start(ifp);
 	}
-
 	splx(s);
 }
 
@@ -607,6 +617,9 @@ bwfm_usb_detach(device_t self, int flags)
 
 	bwfm_usb_free_rx_list(sc);
 	bwfm_usb_free_tx_list(sc);
+
+	mutex_destroy(&sc->sc_rx_lock);
+	mutex_destroy(&sc->sc_tx_lock);
 
 	return 0;
 }
@@ -732,12 +745,18 @@ bwfm_usb_txdata(struct bwfm_softc *bwfm, struct mbuf *m)
 
 	DPRINTFN(2, ("%s: %s\n", DEVNAME(sc), __func__));
 
-	if (TAILQ_EMPTY(&sc->sc_tx_free_list))
+	mutex_enter(&sc->sc_tx_lock);
+
+	if (TAILQ_EMPTY(&sc->sc_tx_free_list)) {
+		mutex_exit(&sc->sc_tx_lock);
 		return ENOBUFS;
+	}
 
 	/* Grab a Tx buffer from our free list. */
 	data = TAILQ_FIRST(&sc->sc_tx_free_list);
 	TAILQ_REMOVE(&sc->sc_tx_free_list, data, next);
+
+	mutex_exit(&sc->sc_tx_lock);
 
 	hdr = (void *)&data->buf[len];
 	hdr->data_offset = 0;

@@ -381,6 +381,32 @@ struct bwfm_wsec_pmk {
 	uint8_t key[2 * BWFM_WSEC_MAX_PSK_LEN + 1];
 };
 
+struct bwfm_wsec_key {
+	uint32_t index;
+	uint32_t len;
+	uint8_t data[32];
+	uint32_t pad_1[18];
+	uint32_t algo;
+#define	BWFM_CRYPTO_ALGO_OFF		0
+#define	BWFM_CRYPTO_ALGO_WEP1		1
+#define	BWFM_CRYPTO_ALGO_TKIP		2
+#define	BWFM_CRYPTO_ALGO_WEP128		3
+#define	BWFM_CRYPTO_ALGO_AES_CCM	4
+#define	BWFM_CRYPTO_ALGO_AES_RESERVED1	5
+#define	BWFM_CRYPTO_ALGO_AES_RESERVED2	6
+	uint32_t flags;
+#define	BWFM_PRIMARY_KEY		(1 << 1)
+	uint32_t pad_2[3];
+	uint32_t iv_initialized;
+	uint32_t pad_3;
+	struct {
+		uint32_t hi;
+		uint16_t lo;
+	} rxiv;
+	uint32_t pad_4[2];
+	uint8_t ea[IEEE80211_ADDR_LEN];
+};
+
 #define	BWFM_BAND_5G			1
 #define	BWFM_BAND_2G			2
 
