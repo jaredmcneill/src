@@ -125,7 +125,7 @@ void
 rk3328_platform_early_putchar(char c)
 {
 #ifdef CONSADDR
-#define CONSADDR_VA	((CONSADDR - SUNXI_CORE_PBASE) + SUNXI_CORE_VBASE)
+#define CONSADDR_VA	((CONSADDR - RK3328_CORE_PBASE) + RK3328_CORE_VBASE)
 	volatile uint32_t *uartaddr = cpu_earlydevice_va_p() ?
 	    (volatile uint32_t *)CONSADDR_VA :
 	    (volatile uint32_t *)CONSADDR;
