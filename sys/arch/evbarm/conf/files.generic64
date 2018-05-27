@@ -12,4 +12,5 @@ include "arch/evbarm/conf/files.fdt"
 #
 include "arch/arm/broadcom/files.bcm2835"
 include "arch/arm/nvidia/files.tegra"
+include "arch/arm/rockchip/files.rockchip"
 include "arch/arm/sunxi/files.sunxi"

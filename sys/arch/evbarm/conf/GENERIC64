@@ -14,9 +14,13 @@ include	"arch/evbarm/conf/GENERIC.common"
 #
 makeoptions 	DTSARCH="arm aarch64"
 makeoptions	DTSGNUARCH="arm arm64"
-makeoptions	DTSSUBDIR="allwinner broadcom nvidia"
+makeoptions	DTSSUBDIR="allwinner broadcom nvidia rockchip"
 makeoptions	DTS="
 	bcm2837-rpi-3-b.dts
+
+	rk3328-evb.dts
+	rk3328-roc-cc.dts
+	rk3328-rock64.dts
 
 	sun50i-a64-bananapi-m64.dts
 	sun50i-a64-nanopi-a64.dts
@@ -45,6 +49,7 @@ makeoptions	DTS="
 options 	CPU_CORTEXA53
 options 	CPU_CORTEXA57
 options 	SOC_BCM2837
+options 	SOC_RK3328
 options 	SOC_TEGRA210
 options 	SOC_SUN50I_A64
 options 	SOC_SUN50I_H5
@@ -61,6 +66,7 @@ options 	DEBUG
 options 	VERBOSE_INIT_ARM # verbose bootstrapping messages
 # EARLYCONS is required for early init messages from VERBOSE_INIT_ARM.
 #options 	EARLYCONS=bcm2837
+#options 	EARLYCONS=rk3328, CONSADDR=0xff130000
 #options 	EARLYCONS=sunxi, CONSADDR=0x01c28000
 #options 	EARLYCONS=tegra, CONSADDR=0x70006000
 
