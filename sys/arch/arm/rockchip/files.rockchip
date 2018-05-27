@@ -6,6 +6,11 @@
 
 file	arch/arm/rockchip/rk_platform.c		soc_rockchip
 
+# IOMUX control
+device	rkiomux
+attach	rkiomux at fdt with rk_iomux
+file	arch/arm/rockchip/rk_iomux.c		rk_iomux
+
 # SOC parameters
 defflag	opt_soc.h			SOC_ROCKCHIP
 defflag	opt_soc.h			SOC_RK3328: SOC_ROCKCHIP

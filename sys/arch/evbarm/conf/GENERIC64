@@ -156,6 +156,7 @@ gpio*		at gpiobus?
 sunxipwm*	at fdt? pass 3		# Allwinner PWM
 
 # MPIO / Pinmux
+rkiomux*	at fdt?			# Rockchip IOMUX
 tegrapinmux*	at fdt?			# NVIDIA Tegra MPIO
 
 # XUSB PADCTL
