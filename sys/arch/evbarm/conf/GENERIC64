@@ -150,6 +150,7 @@ tegra210car*	at fdt? pass 3		# NVIDIA Tegra CAR (T210)
 bcmgpio*	at fdt?			# Broadcom BCM283x GPIO
 sunxigpio*	at fdt? pass 3		# Allwinner GPIO
 tegragpio*	at fdt? pass 2		# NVIDIA Tegra GPIO
+rkgpio*		at rkiomux?		# Rockchip GPIO
 gpio*		at gpiobus?
 
 # PWM controller

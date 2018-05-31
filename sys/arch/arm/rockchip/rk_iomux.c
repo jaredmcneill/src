@@ -234,4 +234,13 @@ rk_iomux_attach(device_t parent, device_t self, void *aux)
 	}
 
 	fdtbus_pinctrl_configure();
+
+	for (child = OF_child(phandle); child; child = OF_peer(child)) {
+		struct fdt_attach_args cfaa = *faa;
+		cfaa.faa_phandle = child;
+		cfaa.faa_name = fdtbus_get_string(child, "name");
+		cfaa.faa_quiet = false;
+
+		config_found(self, &cfaa, NULL);
+	}
 }

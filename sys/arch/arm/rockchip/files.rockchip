@@ -7,9 +7,14 @@
 file	arch/arm/rockchip/rk_platform.c		soc_rockchip
 
 # IOMUX control
-device	rkiomux
+device	rkiomux { }
 attach	rkiomux at fdt with rk_iomux
 file	arch/arm/rockchip/rk_iomux.c		rk_iomux
+
+# GPIO
+device	rkgpio: gpiobus
+attach	rkgpio at rkiomux with rk_gpio
+file	arch/arm/rockchip/rk_gpio.c		rk_gpio
 
 # SOC parameters
 defflag	opt_soc.h			SOC_ROCKCHIP
