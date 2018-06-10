@@ -236,6 +236,7 @@ sunxirtc*	at fdt?			# Allwinner RTC
 tegrartc*	at fdt?			# NVIDIA Tegra RTC
 
 # SDMMC
+dwcmmc*		at fdt?			# Designware SD/MMC
 mmcpwrseq*	at fdt?			# Simple MMC power sequence provider
 sdhc*		at fdt?			# SD Host Controller Interface
 sdhost*		at fdt?			# Broadcom BCM283x SD Host Interface
