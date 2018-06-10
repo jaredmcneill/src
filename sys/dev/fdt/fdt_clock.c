@@ -156,3 +156,37 @@ fdtbus_clock_get(int phandle, const char *clkname)
 
 	return clk;
 }
+
+/*
+ * Search the DT for a clock by "clock-output-names" property.
+ *
+ * This should only be used by clk backends. Not for use by ordinary
+ * clock consumers!
+ */
+struct clk *
+fdtbus_clock_byname(const char *clkname)
+{
+	struct fdtbus_clock_controller *cc;
+	u_int len, resid, index, clock_cells;
+	const char *p;
+
+	for (cc = fdtbus_cc; cc; cc = cc->cc_next) {
+		if (!of_hasprop(cc->cc_phandle, "clock-output-names"))
+			continue;
+		p = fdtbus_get_prop(cc->cc_phandle, "clock-output-names", &len);
+		for (index = 0, resid = len; resid > 0; index++) {
+			if (strcmp(p, clkname) == 0) {
+				if (of_getprop_uint32(cc->cc_phandle, "#clock-cells", &clock_cells))
+					break;
+				const u_int index_raw = htobe32(index);
+				return cc->cc_funcs->decode(cc->cc_dev,
+				    clock_cells > 0 ? &index_raw : NULL,
+				    clock_cells > 0 ? 4 : 0);
+			}
+			resid -= strlen(p) + 1;
+			p += strlen(p) + 1;
+		}
+	}
+
+	return NULL;
+}
