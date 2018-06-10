@@ -124,11 +124,13 @@ static const struct rk_cru_arm_rate armclk_rates[] = {
 };
 
 static const char * armclk_parents[] = { "apll", "gpll", "dpll", "npll" };
-static const char * aclk_bus_pre_parents[] = { "cpll", "gpll", "hdmiphy", NULL };
+static const char * aclk_bus_pre_parents[] = { "cpll", "gpll", "hdmiphy" };
 static const char * hclk_bus_pre_parents[] = { "aclk_bus_pre" };
-static const char * aclk_peri_pre_parents[] = { "cpll", "gpll", "hdmiphy", NULL };
+static const char * aclk_peri_pre_parents[] = { "cpll", "gpll", "hdmiphy" };
 static const char * mmc_parents[] = { "cpll", "gpll", "xin24m", "usb480m" };
 static const char * phclk_peri_parents[] = { "aclk_peri_pre" };
+static const char * mux_uart_parents[] = { "clk_uart0_div", "clk_uart0_frac", "xin24m" };
+static const char * comp_uart_parents[] = { "cpll", "gpll", "usb480m" };
 
 static struct rk_cru_clk rk3328_cru_clks[] = {
 	RK_PLL(RK3328_PLL_APLL, "apll", "xin24m",
@@ -230,24 +232,52 @@ static struct rk_cru_clk rk3328_cru_clks[] = {
 		     0x0210,		/* gate_reg */
 		     __BIT(4),		/* gate_mask */
 		     RK_COMPOSITE_ROUND_DOWN),
+	RK_COMPOSITE(0, "clk_uart0_div", comp_uart_parents,
+		     0x0138,		/* muxdiv_reg */
+		     __BITS(13,12),	/* mux_mask */
+		     __BITS(6,0),	/* div_mask */
+		     0x0204,		/* gate_reg */
+		     __BIT(14),		/* gate_mask */
+		     0),
+	RK_COMPOSITE(0, "clk_uart1_div", comp_uart_parents,
+		     0x0140,		/* muxdiv_reg */
+		     __BITS(13,12),	/* mux_mask */
+		     __BITS(6,0),	/* div_mask */
+		     0x0208,		/* gate_reg */
+		     __BIT(0),		/* gate_mask */
+		     0),
+	RK_COMPOSITE(0, "clk_uart0_div", comp_uart_parents,
+		     0x0148,		/* muxdiv_reg */
+		     __BITS(13,12),	/* mux_mask */
+		     __BITS(6,0),	/* div_mask */
+		     0x0208,		/* gate_reg */
+		     __BIT(2),		/* gate_mask */
+		     0),
 
-	RK_GATE(0, "apll_core", "apll", 0x200, __BIT(0)),
-	RK_GATE(0, "dpll_core", "dpll", 0x200, __BIT(1)),
-	RK_GATE(0, "gpll_core", "gpll", 0x200, __BIT(2)),
-	RK_GATE(0, "npll_core", "npll", 0x200, __BIT(12)),
-	RK_GATE(0, "gpll_peri", "gpll", 0x210, __BIT(0)),
-	RK_GATE(0, "cpll_peri", "cpll", 0x210, __BIT(1)),
-	RK_GATE(0, "pclk_bus", "pclk_bus_pre", 0x220, __BIT(3)),
-	RK_GATE(0, "pclk_phy_pre", "pclk_bus_pre", 0x220, __BIT(4)),
-	RK_GATE(RK3328_ACLK_PERI, "aclk_peri", "aclk_peri_pre", 0x228, __BIT(0)),
-	RK_GATE(RK3328_PCLK_GPIO0, "pclk_gpio0", "pclk_bus", 0x240, __BIT(7)),
-	RK_GATE(RK3328_PCLK_GPIO1, "pclk_gpio1", "pclk_bus", 0x240, __BIT(8)),
-	RK_GATE(RK3328_PCLK_GPIO2, "pclk_gpio2", "pclk_bus", 0x240, __BIT(9)),
-	RK_GATE(RK3328_PCLK_GPIO3, "pclk_gpio3", "pclk_bus", 0x240, __BIT(10)),
-	RK_GATE(RK3328_HCLK_SDMMC, "hclk_sdmmc", "hclk_peri", 0x24c, __BIT(0)),
-	RK_GATE(RK3328_HCLK_SDIO, "hclk_sdio", "hclk_peri", 0x24c, __BIT(1)),
-	RK_GATE(RK3328_HCLK_EMMC, "hclk_emmc", "hclk_peri", 0x24c, __BIT(2)),
-	RK_GATE(RK3328_HCLK_SDMMC_EXT, "hclk_sdmmc_ext", "hclk_peri", 0x24c, __BIT(15)),
+	RK_GATE(0, "apll_core", "apll", 0x200, 0),
+	RK_GATE(0, "dpll_core", "dpll", 0x200, 1),
+	RK_GATE(0, "gpll_core", "gpll", 0x200, 2),
+	RK_GATE(0, "npll_core", "npll", 0x200, 12),
+	RK_GATE(0, "gpll_peri", "gpll", 0x210, 0),
+	RK_GATE(0, "cpll_peri", "cpll", 0x210, 1),
+	RK_GATE(0, "pclk_bus", "pclk_bus_pre", 0x220, 3),
+	RK_GATE(0, "pclk_phy_pre", "pclk_bus_pre", 0x220, 4),
+	RK_GATE(RK3328_ACLK_PERI, "aclk_peri", "aclk_peri_pre", 0x228, 0),
+	RK_GATE(RK3328_PCLK_GPIO0, "pclk_gpio0", "pclk_bus", 0x240, 7),
+	RK_GATE(RK3328_PCLK_GPIO1, "pclk_gpio1", "pclk_bus", 0x240, 8),
+	RK_GATE(RK3328_PCLK_GPIO2, "pclk_gpio2", "pclk_bus", 0x240, 9),
+	RK_GATE(RK3328_PCLK_GPIO3, "pclk_gpio3", "pclk_bus", 0x240, 10),
+	RK_GATE(RK3328_PCLK_UART0, "pclk_uart0", "pclk_bus", 0x240, 11),
+	RK_GATE(RK3328_PCLK_UART1, "pclk_uart1", "pclk_bus", 0x240, 12),
+	RK_GATE(RK3328_PCLK_UART2, "pclk_uart2", "pclk_bus", 0x240, 13),
+	RK_GATE(RK3328_HCLK_SDMMC, "hclk_sdmmc", "hclk_peri", 0x24c, 0),
+	RK_GATE(RK3328_HCLK_SDIO, "hclk_sdio", "hclk_peri", 0x24c, 1),
+	RK_GATE(RK3328_HCLK_EMMC, "hclk_emmc", "hclk_peri", 0x24c, 2),
+	RK_GATE(RK3328_HCLK_SDMMC_EXT, "hclk_sdmmc_ext", "hclk_peri", 0x24c, 15),
+
+	RK_MUX(RK3328_SCLK_UART0, "sclk_uart0", mux_uart_parents, 0x0138, __BITS(9,8)),
+	RK_MUX(RK3328_SCLK_UART1, "sclk_uart1", mux_uart_parents, 0x0140, __BITS(9,8)),
+	RK_MUX(RK3328_SCLK_UART2, "sclk_uart2", mux_uart_parents, 0x0148, __BITS(9,8)),
 };
 
 static int

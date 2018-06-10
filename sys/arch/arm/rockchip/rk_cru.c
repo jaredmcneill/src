@@ -363,6 +363,7 @@ rk_cru_print(struct rk_cru_softc *sc)
 		case RK_CRU_ARM:		type = "arm"; break;
 		case RK_CRU_COMPOSITE:		type = "comp"; break;
 		case RK_CRU_GATE:		type = "gate"; break;
+		case RK_CRU_MUX:		type = "mux"; break;
 		default:			type = "???"; break;
 		}
 

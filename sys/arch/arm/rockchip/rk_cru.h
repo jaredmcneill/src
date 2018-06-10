@@ -44,6 +44,7 @@ enum rk_cru_clktype {
 	RK_CRU_ARM,
 	RK_CRU_COMPOSITE,
 	RK_CRU_GATE,
+	RK_CRU_MUX,
 };
 
 /* PLL clocks */
@@ -219,6 +220,32 @@ const char *rk_cru_gate_get_parent(struct rk_cru_softc *,
 		.get_parent = rk_cru_gate_get_parent,		\
 	}
 
+/* Mux clocks */
+
+struct rk_cru_mux {
+	bus_size_t	reg;
+	uint32_t	mask;
+	const char	**parents;
+	u_int		nparents;
+};
+
+const char *rk_cru_mux_get_parent(struct rk_cru_softc *, struct rk_cru_clk *);
+int	rk_cru_mux_set_parent(struct rk_cru_softc *, struct rk_cru_clk *, const char *);
+
+#define	RK_MUX(_id, _name, _parents, _reg, _mask)		\
+	{							\
+		.id = (_id),					\
+		.type = RK_CRU_MUX,				\
+		.base.name = (_name),				\
+		.base.flags = CLK_SET_RATE_PARENT,		\
+		.u.mux.parents = (_parents),			\
+		.u.mux.nparents = __arraycount(_parents),	\
+		.u.mux.reg = (_reg),				\
+		.u.mux.mask = (_mask),				\
+		.set_parent = rk_cru_mux_set_parent,		\
+		.get_parent = rk_cru_mux_get_parent,		\
+	}
+
 /*
  * Rockchip clock definition
  */
@@ -232,6 +259,7 @@ struct rk_cru_clk {
 		struct rk_cru_arm arm;
 		struct rk_cru_composite composite;
 		struct rk_cru_gate gate;
+		struct rk_cru_mux mux;
 	} u;
 
 	int		(*enable)(struct rk_cru_softc *,

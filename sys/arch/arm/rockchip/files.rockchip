@@ -12,6 +12,7 @@ file	arch/arm/rockchip/rk_cru.c		rk_cru
 file	arch/arm/rockchip/rk_cru_arm.c		rk_cru
 file	arch/arm/rockchip/rk_cru_composite.c	rk_cru
 file	arch/arm/rockchip/rk_cru_gate.c		rk_cru
+file	arch/arm/rockchip/rk_cru_mux.c		rk_cru
 file	arch/arm/rockchip/rk_cru_pll.c		rk_cru
 
 # RK3328 clock and reset unit
