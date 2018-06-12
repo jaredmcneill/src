@@ -71,7 +71,7 @@ rk_cru_arm_set_rate(struct rk_cru_softc *sc,
 
 	KASSERT(clk->type == RK_CRU_ARM);
 
-	if (arm->rates == NULL || rate == 0 || !HAS_GRF(sc))
+	if (arm->rates == NULL || rate == 0)
 		return EIO;
 
 	for (int i = 0; i < arm->nrates; i++)
@@ -97,7 +97,7 @@ rk_cru_arm_set_rate(struct rk_cru_softc *sc,
 		return error;
 
 	const uint32_t write_mask = arm->div_mask << 16;
-	const uint32_t write_val = __SHIFTIN(arm->div_mask, arm_rate->div - 1);
+	const uint32_t write_val = __SHIFTIN(arm_rate->div - 1, arm->div_mask);
 
 	CRU_WRITE(sc, arm->reg, write_mask | write_val);
 
@@ -129,7 +129,7 @@ rk_cru_arm_set_parent(struct rk_cru_softc *sc,
 	for (u_int mux = 0; mux < arm->nparents; mux++)
 		if (strcmp(arm->parents[mux], parent) == 0) {
 			const uint32_t write_mask = arm->mux_mask << 16;
-			const uint32_t write_val = __SHIFTIN(arm->mux_mask, mux);
+			const uint32_t write_val = __SHIFTIN(mux, arm->mux_mask);
 
 			CRU_WRITE(sc, arm->reg, write_mask | write_val);
 			return 0;

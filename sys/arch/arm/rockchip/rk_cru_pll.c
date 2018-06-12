@@ -109,6 +109,7 @@ rk_cru_pll_set_rate(struct rk_cru_softc *sc,
 {
 	struct rk_cru_pll *pll = &clk->u.pll;
 	const struct rk_cru_pll_rate *pll_rate = NULL;
+	uint32_t val;
 	int retry;
 
 	KASSERT(clk->type == RK_CRU_PLL);
@@ -127,19 +128,18 @@ rk_cru_pll_set_rate(struct rk_cru_softc *sc,
 	CRU_WRITE(sc, pll->con_base + PLL_CON0,
 	    __SHIFTIN(pll_rate->postdiv1, PLL_POSTDIV1) |
 	    __SHIFTIN(pll_rate->fbdiv, PLL_FBDIV) |
-	    PLL_BYPASS |
 	    PLL_WRITE_MASK);
+
 	CRU_WRITE(sc, pll->con_base + PLL_CON1,
 	    __SHIFTIN(pll_rate->dsmpd, PLL_DSMPD) |
 	    __SHIFTIN(pll_rate->postdiv2, PLL_POSTDIV2) |
 	    __SHIFTIN(pll_rate->refdiv, PLL_REFDIV) |
 	    PLL_WRITE_MASK);
-	CRU_WRITE(sc, pll->con_base + PLL_CON2,
-	    __SHIFTIN(pll_rate->fracdiv, PLL_FRACDIV) |
-	    PLL_WRITE_MASK);
 
-	CRU_WRITE(sc, pll->con_base + PLL_CON0,
-	    PLL_BYPASS << 16);
+	val = CRU_READ(sc, pll->con_base + PLL_CON2);
+	val &= ~PLL_FRACDIV;
+	val |= __SHIFTIN(pll_rate->fracdiv, PLL_FRACDIV);
+	CRU_WRITE(sc, pll->con_base + PLL_CON2, val);
 
 	for (retry = 1000; retry > 0; retry--) {
 		if (GRF_READ(sc, GRF_SOC_STATUS0) & pll->lock_mask)

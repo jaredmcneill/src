@@ -224,32 +224,37 @@ fdtbus_clock_assign(int phandle)
 		rates_len = 0;
 
 	const u_int nclocks = fdtbus_clock_count_prop(phandle, "assigned-clocks");
+	const u_int nparents = fdtbus_clock_count_prop(phandle, "assigned-clock-parents");
+	const u_int nrates = rates_len / sizeof(*rates);
 
 	for (index = 0; index < nclocks; index++) {
 		clk = fdtbus_clock_get_index_prop(phandle, index, "assigned-clocks");
 		if (clk == NULL) {
-			aprint_debug("clk: assigned clock (%u) not found, skipping...\n", index);
+			aprint_error("clk: assigned clock (%u) not found, skipping...\n", index);
 			continue;
 		}
 
-		clk_parent = fdtbus_clock_get_index_prop(phandle, index, "assigned-clock-parents");
-		if (clk_parent != NULL) {
-			error = clk_set_parent(clk, clk_parent);
-			if (error != 0) {
-				aprint_error("clk: failed to set %s parent to %s, error %d\n",
-				    clk->name, clk_parent->name, error);
+		if (index < nparents) {
+			clk_parent = fdtbus_clock_get_index_prop(phandle, index, "assigned-clock-parents");
+			if (clk_parent != NULL) {
+				error = clk_set_parent(clk, clk_parent);
+				if (error != 0) {
+					aprint_error("clk: failed to set %s parent to %s, error %d\n",
+					    clk->name, clk_parent->name, error);
+				}
+			} else {
+				aprint_error("clk: failed to set %s parent (not found)\n", clk->name);
 			}
 		}
 
-		if (rates_len >= sizeof(*rates)) {
-			const u_int rate = be32dec(rates);
+		if (index < nrates) {
+			const u_int rate = be32toh(rates[index]);
 			if (rate != 0) {
 				error = clk_set_rate(clk, rate);
 				if (error != 0)
 					aprint_error("clk: failed to set %s rate to %u Hz, error %d\n",
 					    clk->name, rate, error);
 			}
-			rates_len -= sizeof(*rates);
 		}
 	}
 }

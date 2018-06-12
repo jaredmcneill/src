@@ -167,7 +167,7 @@ static struct rk_cru_clk rk3328_cru_clks[] = {
 
 	RK_ARM(RK3328_ARMCLK, "armclk", armclk_parents,
 	       0x0100,			/* reg */
-	       __BITS(7,6), 3, 1,	/* mux_mask, mux_main, mux_alt */
+	       __BITS(7,6), 3, 0,	/* mux_mask, mux_main, mux_alt */
 	       __BITS(4,0),		/* div_mask */
 	       armclk_rates),
 
