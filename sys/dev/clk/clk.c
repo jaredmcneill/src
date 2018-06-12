@@ -208,14 +208,17 @@ clk_get_rate(struct clk *clk)
 int
 clk_set_rate(struct clk *clk, u_int rate)
 {
-	if (clk->flags & CLK_SET_RATE_PARENT) {
+	if (clk->flags & CLK_SET_RATE_PARENT)
 		return clk_set_rate(clk_get_parent(clk), rate);
-	} else if (clk->domain->funcs->set_rate) {
+
+	if (clk->domain->funcs->set_rate)
 		return clk->domain->funcs->set_rate(clk->domain->priv,
 		    clk, rate);
-	} else {
-		return EINVAL;
-	}
+
+	if (clk_get_rate(clk) == rate)
+		return 0;
+
+	return EINVAL;
 }
 
 u_int
