@@ -310,6 +310,8 @@ sunxithermal*	at fdt?			# Allwinner thermal sensor controller
 tegrasoctherm*	at fdt?			# NVIDIA Tegra SOC_THERM
 
 # USB
+rkusb*		at fdt? pass 9		# Rockchip USB PHY
+#rkusbphy*	at rkusb?
 sunxiusbphy*	at fdt? pass 9		# Allwinner USB PHY
 sunxiusb3phy*	at fdt? pass 9		# Allwinner USB3 PHY
 tegrausbphy*	at fdt?			# NVIDIA Tegra USB PHY

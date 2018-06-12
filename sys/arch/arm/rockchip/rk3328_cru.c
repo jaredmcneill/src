@@ -129,6 +129,7 @@ static const char * hclk_bus_pre_parents[] = { "aclk_bus_pre" };
 static const char * aclk_peri_pre_parents[] = { "cpll", "gpll", "hdmiphy" };
 static const char * mmc_parents[] = { "cpll", "gpll", "xin24m", "usb480m" };
 static const char * phclk_peri_parents[] = { "aclk_peri_pre" };
+static const char * mux_usb480m_parents[] = { "usb480m_phy", "xin24m" };
 static const char * mux_uart_parents[] = { "clk_uart0_div", "clk_uart0_frac", "xin24m" };
 static const char * comp_uart_parents[] = { "cpll", "gpll", "usb480m" };
 
@@ -270,11 +271,17 @@ static struct rk_cru_clk rk3328_cru_clks[] = {
 	RK_GATE(RK3328_PCLK_UART0, "pclk_uart0", "pclk_bus", 0x240, 11),
 	RK_GATE(RK3328_PCLK_UART1, "pclk_uart1", "pclk_bus", 0x240, 12),
 	RK_GATE(RK3328_PCLK_UART2, "pclk_uart2", "pclk_bus", 0x240, 13),
+	RK_GATE(RK3328_ACLK_USB3OTG, "aclk_usb3otg", "aclk_peri", 0x24c, 4),
 	RK_GATE(RK3328_HCLK_SDMMC, "hclk_sdmmc", "hclk_peri", 0x24c, 0),
 	RK_GATE(RK3328_HCLK_SDIO, "hclk_sdio", "hclk_peri", 0x24c, 1),
 	RK_GATE(RK3328_HCLK_EMMC, "hclk_emmc", "hclk_peri", 0x24c, 2),
 	RK_GATE(RK3328_HCLK_SDMMC_EXT, "hclk_sdmmc_ext", "hclk_peri", 0x24c, 15),
+	RK_GATE(RK3328_HCLK_HOST0, "hclk_host0", "hclk_peri", 0x24c, 6),
+	RK_GATE(RK3328_HCLK_HOST0_ARB, "hclk_host0_arb", "hclk_peri", 0x24c, 7),
+	RK_GATE(RK3328_HCLK_OTG, "hclk_otg", "hclk_peri", 0x24c, 8),
+	RK_GATE(RK3328_HCLK_OTG_PMU, "hclk_otg_pmu", "hclk_peri", 0x24c, 9),
 
+	RK_MUX(RK3328_USB480M, "usb480m", mux_usb480m_parents, 0x0084, __BIT(13)),
 	RK_MUX(RK3328_SCLK_UART0, "sclk_uart0", mux_uart_parents, 0x0138, __BITS(9,8)),
 	RK_MUX(RK3328_SCLK_UART1, "sclk_uart1", mux_uart_parents, 0x0140, __BITS(9,8)),
 	RK_MUX(RK3328_SCLK_UART2, "sclk_uart2", mux_uart_parents, 0x0148, __BITS(9,8)),

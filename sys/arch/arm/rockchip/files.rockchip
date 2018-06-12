@@ -29,6 +29,11 @@ device	rkgpio: gpiobus
 attach	rkgpio at rkiomux with rk_gpio
 file	arch/arm/rockchip/rk_gpio.c		rk_gpio
 
+# USB PHY
+device	rkusb { }
+attach	rkusb at fdt with rk_usb
+file	arch/arm/rockchip/rk_usb.c		rk_usb
+
 # SOC parameters
 defflag	opt_soc.h			SOC_ROCKCHIP
 defflag	opt_soc.h			SOC_RK3328: SOC_ROCKCHIP
