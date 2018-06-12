@@ -230,7 +230,7 @@ fdtbus_clock_assign(int phandle)
 	for (index = 0; index < nclocks; index++) {
 		clk = fdtbus_clock_get_index_prop(phandle, index, "assigned-clocks");
 		if (clk == NULL) {
-			aprint_error("clk: assigned clock (%u) not found, skipping...\n", index);
+			aprint_debug("clk: assigned clock (%u) not found, skipping...\n", index);
 			continue;
 		}
 
@@ -243,7 +243,7 @@ fdtbus_clock_assign(int phandle)
 					    clk->name, clk_parent->name, error);
 				}
 			} else {
-				aprint_error("clk: failed to set %s parent (not found)\n", clk->name);
+				aprint_debug("clk: failed to set %s parent (not found)\n", clk->name);
 			}
 		}
 
