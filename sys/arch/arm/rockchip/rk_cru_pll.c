@@ -141,6 +141,11 @@ rk_cru_pll_set_rate(struct rk_cru_softc *sc,
 	val |= __SHIFTIN(pll_rate->fracdiv, PLL_FRACDIV);
 	CRU_WRITE(sc, pll->con_base + PLL_CON2, val);
 
+	/* Set PLL work mode to normal */
+	const uint32_t write_mask = pll->mode_mask << 16;
+	const uint32_t write_val = pll->mode_mask;
+	CRU_WRITE(sc, pll->mode_reg, write_mask | write_val);
+
 	for (retry = 1000; retry > 0; retry--) {
 		if (GRF_READ(sc, GRF_SOC_STATUS0) & pll->lock_mask)
 			break;
