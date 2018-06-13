@@ -46,7 +46,9 @@ static int rk_usb_match(device_t, cfdata_t, void *);
 static void rk_usb_attach(device_t, device_t, void *);
 
 #define	CON0_REG	0x00
-#define	 CON0_SIDDQ	__BIT(13)
+#define	CON1_REG	0x04
+#define	CON2_REG	0x08
+#define	 USBPHY_COMMONONN	__BIT(4)
 
 enum rk_usb_type {
 	USB_RK3328 = 1,
@@ -107,7 +109,9 @@ rk_usb_clk_enable(void *priv, struct clk *clk)
 {
 	struct rk_usb_softc * const sc = priv;
 
-	USB_WRITE(sc, CON0_REG, USB_READ(sc, CON0_REG) | CON0_SIDDQ);
+	const uint32_t write_mask = USBPHY_COMMONONN << 16;
+	const uint32_t write_val = 0;
+	USB_WRITE(sc, CON2_REG, write_mask | write_val);
 
 	return 0;
 }
@@ -117,7 +121,9 @@ rk_usb_clk_disable(void *priv, struct clk *clk)
 {
 	struct rk_usb_softc * const sc = priv;
 
-	USB_WRITE(sc, CON0_REG, USB_READ(sc, CON0_REG) & ~CON0_SIDDQ);
+	const uint32_t write_mask = USBPHY_COMMONONN << 16;
+	const uint32_t write_val = USBPHY_COMMONONN;
+	USB_WRITE(sc, CON2_REG, write_mask | write_val);
 
 	return 0;
 }
@@ -160,6 +166,7 @@ rk_usb_attach(device_t parent, device_t self, void *aux)
 	struct fdt_attach_args * const faa = aux;
 	const int phandle = faa->faa_phandle;
 	bus_addr_t grf_addr, phy_addr, phy_size;
+	int child;
 
 	sc->sc_dev = self;
 	sc->sc_bst = faa->faa_bst;
@@ -189,7 +196,121 @@ rk_usb_attach(device_t parent, device_t self, void *aux)
 	clk_attach(&sc->sc_usbclk.base);
 
 	aprint_naive("\n");
-	aprint_normal(": USB2PHY\n");
+	aprint_normal(": USB2 PHY\n");
 
 	fdtbus_register_clock_controller(self, phandle, &rk_usb_fdt_funcs);
+
+	for (child = OF_child(phandle); child; child = OF_peer(child)) {
+		if (!fdtbus_status_okay(child))
+			continue;
+
+		struct fdt_attach_args cfaa = *faa;
+		cfaa.faa_phandle = child;
+		cfaa.faa_name = fdtbus_get_string(child, "name");
+		cfaa.faa_quiet = false;
+
+		config_found(self, &cfaa, NULL);
+	}
+}
+
+/*
+ * USB PHY
+ */
+
+static int rk_usbphy_match(device_t, cfdata_t, void *);
+static void rk_usbphy_attach(device_t, device_t, void *);
+
+struct rk_usbphy_softc {
+	device_t	sc_dev;
+	int		sc_phandle;
+};
+
+CFATTACH_DECL_NEW(rk_usbphy, sizeof(struct rk_usbphy_softc),
+	rk_usbphy_match, rk_usbphy_attach, NULL, NULL);
+
+static void *
+rk_usbphy_acquire(device_t dev, const void *data, size_t len)
+{
+	struct rk_usbphy_softc * const sc = device_private(dev);
+
+	if (len != 0)
+		return NULL;
+
+	return sc;
+}
+
+static void
+rk_usbphy_release(device_t dev, void *priv)
+{
+}
+
+static int
+rk_usbphy_otg_enable(device_t dev, void *priv, bool enable)
+{
+	struct rk_usb_softc * const usb_sc = device_private(device_parent(dev));
+
+	const uint32_t write_mask = 0x1ffU << 16;
+	const uint32_t write_val = enable ? 0 : 0x1d1;
+	USB_WRITE(usb_sc, CON0_REG, write_mask | write_val);
+
+	return 0;
+}
+
+static int
+rk_usbphy_host_enable(device_t dev, void *priv, bool enable)
+{
+	struct rk_usb_softc * const usb_sc = device_private(device_parent(dev));
+
+	const uint32_t write_mask = 0x1ffU << 16;
+	const uint32_t write_val = enable ? 0 : 0x1d1;
+	USB_WRITE(usb_sc, CON1_REG, write_mask | write_val);
+
+	return 0;
+}
+
+const struct fdtbus_phy_controller_func rk_usbphy_otg_funcs = {
+	.acquire = rk_usbphy_acquire,
+	.release = rk_usbphy_release,
+	.enable = rk_usbphy_otg_enable,
+};
+
+const struct fdtbus_phy_controller_func rk_usbphy_host_funcs = {
+	.acquire = rk_usbphy_acquire,
+	.release = rk_usbphy_release,
+	.enable = rk_usbphy_host_enable,
+};
+
+static int
+rk_usbphy_match(device_t parent, cfdata_t cf, void *aux)
+{
+	struct fdt_attach_args * const faa = aux;
+	const int phandle = faa->faa_phandle;
+	const char *name = fdtbus_get_string(phandle, "name");
+
+	if (strcmp(name, "otg-port") == 0 || strcmp(name, "host-port") == 0)
+		return 1;
+
+	return 0;
+}
+
+static void
+rk_usbphy_attach(device_t parent, device_t self, void *aux)
+{
+	struct rk_usbphy_softc * const sc = device_private(self);
+	struct fdt_attach_args * const faa = aux;
+	const int phandle = faa->faa_phandle;
+	const char *name = fdtbus_get_string(phandle, "name");
+
+	sc->sc_dev = self;
+	sc->sc_phandle = phandle;
+
+	aprint_naive("\n");
+
+	if (strcmp(name, "otg-port") == 0) {
+		aprint_normal(": USB2 OTG port\n");
+		fdtbus_register_phy_controller(self, phandle, &rk_usbphy_otg_funcs);
+	} else if (strcmp(name, "host-port") == 0) {
+		aprint_normal(": USB2 host port\n");
+		fdtbus_register_phy_controller(self, phandle, &rk_usbphy_host_funcs);
+	}
 }

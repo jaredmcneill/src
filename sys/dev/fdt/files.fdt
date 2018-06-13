@@ -84,6 +84,10 @@ file	dev/fdt/display_timing.c		fdt_display_timing
 attach	com at fdt with dw_apb_uart
 file	dev/fdt/dw_apb_uart.c			dw_apb_uart
 
+# Designware USB2 OTG
+attach	dwctwo at fdt with dwc2_fdt
+file	dev/fdt/dwc2_fdt.c			dwc2_fdt
+
 # Designware USB3 XHCI
 attach	xhci at fdt with dwc3_fdt
 file	dev/fdt/dwc3_fdt.c			dwc3_fdt

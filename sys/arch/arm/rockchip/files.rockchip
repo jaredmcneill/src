@@ -32,7 +32,9 @@ file	arch/arm/rockchip/rk_gpio.c		rk_gpio
 # USB PHY
 device	rkusb { }
 attach	rkusb at fdt with rk_usb
-file	arch/arm/rockchip/rk_usb.c		rk_usb
+device	rkusbphy
+attach	rkusbphy at rkusb with rk_usbphy
+file	arch/arm/rockchip/rk_usb.c		rk_usb | rk_usbphy
 
 # SOC parameters
 defflag	opt_soc.h			SOC_ROCKCHIP
