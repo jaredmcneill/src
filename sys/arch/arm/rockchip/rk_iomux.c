@@ -227,7 +227,7 @@ rk_iomux_attach(device_t parent, device_t self, void *aux)
 
 	for (child = OF_child(phandle); child; child = OF_peer(child)) {
 		for (sub = OF_child(child); sub; sub = OF_peer(sub)) {
-			if (!of_hasprop(child, "rockchip,pins"))
+			if (!of_hasprop(sub, "rockchip,pins"))
 				continue;
 			fdtbus_register_pinctrl_config(self, sub, &rk_iomux_pinctrl_funcs);
 		}
