@@ -171,7 +171,7 @@ rk_iomux_pinctrl_set_config(device_t dev, const void *data, size_t len)
 		const u_int bank = be32toh(pins[0]);
 		const u_int idx = be32toh(pins[1]);
 		const u_int mux = be32toh(pins[2]);
-		const int cfg = be32toh(fdtbus_get_phandle_from_native(pins[3]));
+		const int cfg = fdtbus_get_phandle_from_native(be32toh(pins[3]));
 
 		rk_iomux_config(sc, cfg, bank, idx, mux);
 
