@@ -130,7 +130,9 @@ static const char * aclk_peri_pre_parents[] = { "cpll", "gpll", "hdmiphy" };
 static const char * mmc_parents[] = { "cpll", "gpll", "xin24m", "usb480m" };
 static const char * phclk_peri_parents[] = { "aclk_peri_pre" };
 static const char * mux_usb480m_parents[] = { "usb480m_phy", "xin24m" };
-static const char * mux_uart_parents[] = { "clk_uart0_div", "clk_uart0_frac", "xin24m" };
+static const char * mux_uart0_parents[] = { "clk_uart0_div", "clk_uart0_frac", "xin24m" };
+static const char * mux_uart1_parents[] = { "clk_uart1_div", "clk_uart1_frac", "xin24m" };
+static const char * mux_uart2_parents[] = { "clk_uart2_div", "clk_uart2_frac", "xin24m" };
 static const char * comp_uart_parents[] = { "cpll", "gpll", "usb480m" };
 
 static struct rk_cru_clk rk3328_cru_clks[] = {
@@ -247,7 +249,7 @@ static struct rk_cru_clk rk3328_cru_clks[] = {
 		     0x0208,		/* gate_reg */
 		     __BIT(0),		/* gate_mask */
 		     0),
-	RK_COMPOSITE(0, "clk_uart0_div", comp_uart_parents,
+	RK_COMPOSITE(0, "clk_uart2_div", comp_uart_parents,
 		     0x0148,		/* muxdiv_reg */
 		     __BITS(13,12),	/* mux_mask */
 		     __BITS(6,0),	/* div_mask */
@@ -282,9 +284,9 @@ static struct rk_cru_clk rk3328_cru_clks[] = {
 	RK_GATE(RK3328_HCLK_OTG_PMU, "hclk_otg_pmu", "hclk_peri", 0x24c, 9),
 
 	RK_MUX(RK3328_USB480M, "usb480m", mux_usb480m_parents, 0x0084, __BIT(13)),
-	RK_MUX(RK3328_SCLK_UART0, "sclk_uart0", mux_uart_parents, 0x0138, __BITS(9,8)),
-	RK_MUX(RK3328_SCLK_UART1, "sclk_uart1", mux_uart_parents, 0x0140, __BITS(9,8)),
-	RK_MUX(RK3328_SCLK_UART2, "sclk_uart2", mux_uart_parents, 0x0148, __BITS(9,8)),
+	RK_MUX(RK3328_SCLK_UART0, "sclk_uart0", mux_uart0_parents, 0x0138, __BITS(9,8)),
+	RK_MUX(RK3328_SCLK_UART1, "sclk_uart1", mux_uart1_parents, 0x0140, __BITS(9,8)),
+	RK_MUX(RK3328_SCLK_UART2, "sclk_uart2", mux_uart2_parents, 0x0148, __BITS(9,8)),
 };
 
 static int
