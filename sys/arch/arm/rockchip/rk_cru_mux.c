@@ -41,10 +41,14 @@ rk_cru_mux_get_parent(struct rk_cru_softc *sc,
     struct rk_cru_clk *clk)
 {
 	struct rk_cru_mux *mux = &clk->u.mux;
+	const bool mux_grf = (mux->flags & RK_MUX_GRF) != 0;
 
 	KASSERT(clk->type == RK_CRU_MUX);
 
-	const uint32_t val = CRU_READ(sc, mux->reg);
+	if (mux_grf && !HAS_GRF(sc))
+		return NULL;
+
+	const uint32_t val = mux_grf ? GRF_READ(sc, mux->reg) : CRU_READ(sc, mux->reg);
 	const u_int index = __SHIFTOUT(val, mux->mask);
 
 	return mux->parents[index];
@@ -55,15 +59,23 @@ rk_cru_mux_set_parent(struct rk_cru_softc *sc,
     struct rk_cru_clk *clk, const char *parent)
 {
 	struct rk_cru_mux *mux = &clk->u.mux;
+	const bool mux_grf = (mux->flags & RK_MUX_GRF) != 0;
 
 	KASSERT(clk->type == RK_CRU_MUX);
+
+	if (mux_grf && !HAS_GRF(sc))
+		return ENXIO;
 
 	for (u_int index = 0; index < mux->nparents; index++) {
 		if (strcmp(mux->parents[index], parent) == 0) {
 			const uint32_t write_mask = mux->mask << 16;
 			const uint32_t write_val = __SHIFTIN(index, mux->mask);
 
-			CRU_WRITE(sc, mux->reg, write_mask | write_val);
+			if (mux_grf)
+				GRF_WRITE(sc, mux->reg, write_mask | write_val);
+			else
+				CRU_WRITE(sc, mux->reg, write_mask | write_val);
+
 			return 0;
 		}
 	}

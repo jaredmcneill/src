@@ -36,6 +36,10 @@ device	rkusbphy
 attach	rkusbphy at rkusb with rk_usbphy
 file	arch/arm/rockchip/rk_usb.c		rk_usb | rk_usbphy
 
+# GMAC
+attach	awge at fdt with rk_gmac
+file	arch/arm/rockchip/rk_gmac.c		rk_gmac
+
 # SOC parameters
 defflag	opt_soc.h			SOC_ROCKCHIP
 defflag	opt_soc.h			SOC_RK3328: SOC_ROCKCHIP

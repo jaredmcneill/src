@@ -227,12 +227,14 @@ struct rk_cru_mux {
 	uint32_t	mask;
 	const char	**parents;
 	u_int		nparents;
+	u_int		flags;
+#define	RK_MUX_GRF			0x01
 };
 
 const char *rk_cru_mux_get_parent(struct rk_cru_softc *, struct rk_cru_clk *);
 int	rk_cru_mux_set_parent(struct rk_cru_softc *, struct rk_cru_clk *, const char *);
 
-#define	RK_MUX(_id, _name, _parents, _reg, _mask)		\
+#define	RK_MUX_FLAGS(_id, _name, _parents, _reg, _mask, _flags)	\
 	{							\
 		.id = (_id),					\
 		.type = RK_CRU_MUX,				\
@@ -242,9 +244,14 @@ int	rk_cru_mux_set_parent(struct rk_cru_softc *, struct rk_cru_clk *, const char
 		.u.mux.nparents = __arraycount(_parents),	\
 		.u.mux.reg = (_reg),				\
 		.u.mux.mask = (_mask),				\
+		.u.mux.flags = (_flags),			\
 		.set_parent = rk_cru_mux_set_parent,		\
 		.get_parent = rk_cru_mux_get_parent,		\
 	}
+#define	RK_MUX(_id, _name, _parents, _reg, _mask)		\
+	RK_MUX_FLAGS(_id, _name, _parents, _reg, _mask, 0)
+#define	RK_MUXGRF(_id, _name, _parents, _reg, _mask)		\
+	RK_MUX_FLAGS(_id, _name, _parents, _reg, _mask, RK_MUX_GRF)
 
 /*
  * Rockchip clock definition
