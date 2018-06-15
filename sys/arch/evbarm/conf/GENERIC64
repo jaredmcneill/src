@@ -172,6 +172,7 @@ ppb*		at pci? dev ? function ?
 pci*		at ppb?
 
 # Ethernet
+awge*		at fdt?				# DesignWare Gigabit Ethernet
 emac*		at fdt?				# Allwinner Gigabit Ethernet (EMAC)
 re*		at pci? dev ? function ?	# Realtek RTL8111GS
 

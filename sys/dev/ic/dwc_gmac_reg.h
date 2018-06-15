@@ -141,7 +141,9 @@
 #define	GMAC_DMA_OP_TXSTOREFORWARD	__BIT(21) /* start TX when a
  						    full frame is available */
 #define	GMAC_DMA_OP_FLUSHTX		__BIT(20) /* flush TX fifo */
+#define	GMAC_DMA_OP_TTC			__BITS(16,14) /* TX thresh control */
 #define	GMAC_DMA_OP_TXSTART		__BIT(13) /* start TX DMA engine */
+#define	GMAC_DMA_OP_RTC			__BITS(4,3) /* RX thres control */
 #define	GMAC_DMA_OP_RXSTART		__BIT(1)  /* start RX DMA engine */
 
 #define	GMAC_DMA_INT_NIE		__BIT(16) /* Normal/Summary */
