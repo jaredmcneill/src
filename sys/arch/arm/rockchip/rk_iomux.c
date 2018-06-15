@@ -63,8 +63,66 @@ __KERNEL_RCSID(0, "$NetBSD$");
 #define	  GRF_GPIO_E_CTL_MASK		0x3
 #define	 GRF_GPIO_E_WRITE_EN(_idx)	(0x3 << (((_idx) & 7) * 2 + 16))
 
+struct rk_iomux {
+	bus_size_t		base;
+	u_int			type;
+#define	RK_IOMUX_TYPE_3BIT	0x01
+};
+
+struct rk_iomux_bank {
+	struct rk_iomux		iomux[4];
+};
+
+#define	RK_IOMUX(_reg, _shift, _mask)	\
+	{ .reg = (_reg), .shift = (_shift), .mask = (_mask) }
+
+static const struct rk_iomux_bank rk3328_iomux_banks[] = {
+	[0] = {
+		.iomux = {
+			[0] = { .base = 0x0000 },
+			[1] = { .base = 0x0004 },
+			[2] = { .base = 0x0008 },
+			[3] = { .base = 0x000c },
+		},
+	},
+	[1] = {
+		.iomux = {
+			[0] = { .base = 0x0010 },
+			[1] = { .base = 0x0014 },
+			[2] = { .base = 0x0018 },
+			[3] = { .base = 0x001c },
+		}
+	},
+	[2] = {
+		.iomux = {
+			[0] = { .base = 0x0020 },
+			[1] = { .base = 0x0024, .type = RK_IOMUX_TYPE_3BIT },
+			[2] = { .base = 0x002c, .type = RK_IOMUX_TYPE_3BIT },
+			[3] = { .base = 0x0034 },
+		},
+	},
+	[3] = {
+		.iomux = {
+			[0] = { .base = 0x0038, .type = RK_IOMUX_TYPE_3BIT },
+			[1] = { .base = 0x0040, .type = RK_IOMUX_TYPE_3BIT },
+			[2] = { .base = 0x0048 },
+			[3] = { .base = 0x004c },
+		},
+	},
+};
+
+struct rk_iomux_config {
+	const struct rk_iomux_bank *banks;
+	u_int nbanks;
+};
+
+static const struct rk_iomux_config rk3328_iomux_config = {
+	.banks = rk3328_iomux_banks,
+	.nbanks = __arraycount(rk3328_iomux_banks),
+};
+
 static const struct of_compat_data compat_data[] = {
-	{ "rockchip,rk3328-pinctrl",		1 },
+	{ "rockchip,rk3328-pinctrl",	(uintptr_t)&rk3328_iomux_config },
 	{ NULL }
 };
 
@@ -72,6 +130,8 @@ struct rk_iomux_softc {
 	device_t sc_dev;
 	bus_space_tag_t sc_bst;
 	bus_space_handle_t sc_bsh;
+
+	const struct rk_iomux_config *sc_conf;
 };
 
 #define RD4(sc, reg) 		\
@@ -84,6 +144,25 @@ static void	rk_iomux_attach(device_t, device_t, void *);
 
 CFATTACH_DECL_NEW(rk_iomux, sizeof(struct rk_iomux_softc),
 	rk_iomux_match, rk_iomux_attach, NULL, NULL);
+
+static void
+rk_iomux_calc_iomux_reg(struct rk_iomux_softc *sc, u_int bank, u_int pin, bus_size_t *reg, uint32_t *mask)
+{
+	const struct rk_iomux_bank *banks = sc->sc_conf->banks;
+
+	KASSERT(bank < sc->sc_conf->nbanks);
+
+	*reg = banks[bank].iomux[pin / 8].base;
+	if (banks[bank].iomux[pin / 8].type & RK_IOMUX_TYPE_3BIT) {
+		if ((pin % 8) >= 5)
+			*reg += 0x04;
+		const u_int bit = (pin % 8 % 5) * 3;
+		*mask = 7 << bit;
+	} else {
+		const u_int bit = (pin % 8) * 2;
+		*mask = 3 << bit;
+	}
+}
 
 static void
 rk_iomux_set_bias(struct rk_iomux_softc *sc, u_int bank, u_int idx, u_int bias)
@@ -104,9 +183,12 @@ rk_iomux_set_drive_strength(struct rk_iomux_softc *sc, u_int bank, u_int idx, u_
 static void
 rk_iomux_set_mux(struct rk_iomux_softc *sc, u_int bank, u_int idx, u_int mux)
 {
-	WR4(sc, GRF_GPIO_IOMUX_REG(bank, idx),
-	    __SHIFTIN(GRF_GPIO_IOMUX_SEL_MASK, GRF_GPIO_IOMUX_WRITE_EN(idx)) |
-	    __SHIFTIN(mux, GRF_GPIO_IOMUX_SEL(idx)));
+	bus_size_t reg;
+	uint32_t mask;
+
+	rk_iomux_calc_iomux_reg(sc, bank, idx, &reg, &mask);
+
+	WR4(sc, reg, (mask << 16) | __SHIFTIN(mux, mask));
 }
 
 static int
@@ -221,6 +303,7 @@ rk_iomux_attach(device_t parent, device_t self, void *aux)
 		aprint_error(": couldn't map registers\n");
 		return;
 	}
+	sc->sc_conf = (void *)of_search_compatible(phandle, compat_data)->data;
 
 	aprint_naive("\n");
 	aprint_normal(": IOMUX control\n");
