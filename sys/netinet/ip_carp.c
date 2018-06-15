@@ -1,4 +1,4 @@
-/*	$NetBSD: ip_carp.c,v 1.96 2018/05/18 18:58:51 maxv Exp $	*/
+/*	$NetBSD: ip_carp.c,v 1.98 2018/06/14 08:06:07 yamaguchi Exp $	*/
 /*	$OpenBSD: ip_carp.c,v 1.113 2005/11/04 08:11:54 mcbride Exp $	*/
 
 /*
@@ -33,7 +33,7 @@
 #endif
 
 #include <sys/cdefs.h>
-__KERNEL_RCSID(0, "$NetBSD: ip_carp.c,v 1.96 2018/05/18 18:58:51 maxv Exp $");
+__KERNEL_RCSID(0, "$NetBSD: ip_carp.c,v 1.98 2018/06/14 08:06:07 yamaguchi Exp $");
 
 /*
  * TODO:
@@ -2312,7 +2312,11 @@ carp_ether_addmulti(struct carp_softc *sc, struct ifreq *ifr)
 	 * statement shouldn't fail.
 	 */
 	(void)ether_multiaddr(sa, addrlo, addrhi);
-	ETHER_LOOKUP_MULTI(addrlo, addrhi, &sc->sc_ac, mc->mc_enm);
+
+	ETHER_LOCK(&sc->sc_ac);
+	mc->mc_enm = ether_lookup_multi(addrlo, addrhi, &sc->sc_ac);
+	ETHER_UNLOCK(&sc->sc_ac);
+
 	memcpy(&mc->mc_addr, sa, sa->sa_len);
 	LIST_INSERT_HEAD(&sc->carp_mc_listhead, mc, mc_entries);
 
@@ -2351,7 +2355,10 @@ carp_ether_delmulti(struct carp_softc *sc, struct ifreq *ifr)
 	 */
 	if ((error = ether_multiaddr(sa, addrlo, addrhi)) != 0)
 		return (error);
-	ETHER_LOOKUP_MULTI(addrlo, addrhi, &sc->sc_ac, enm);
+
+	ETHER_LOCK(&sc->sc_ac);
+	enm = ether_lookup_multi(addrlo, addrhi, &sc->sc_ac);
+	ETHER_UNLOCK(&sc->sc_ac);
 	if (enm == NULL)
 		return (EINVAL);
 

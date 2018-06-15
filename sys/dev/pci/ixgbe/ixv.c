@@ -1,4 +1,4 @@
-/*$NetBSD: ixv.c,v 1.101 2018/05/25 04:40:27 ozaki-r Exp $*/
+/*$NetBSD: ixv.c,v 1.105 2018/06/06 20:02:31 kamil Exp $*/
 
 /******************************************************************************
 
@@ -46,7 +46,7 @@
 /************************************************************************
  * Driver version
  ************************************************************************/
-char ixv_driver_version[] = "2.0.1-k";
+static const char ixv_driver_version[] = "2.0.1-k";
 
 /************************************************************************
  * PCI Device ID Table
@@ -57,7 +57,7 @@ char ixv_driver_version[] = "2.0.1-k";
  *
  *   { Vendor ID, Device ID, SubVendor ID, SubDevice ID, String Index }
  ************************************************************************/
-static ixgbe_vendor_info_t ixv_vendor_info_array[] =
+static const ixgbe_vendor_info_t ixv_vendor_info_array[] =
 {
 	{IXGBE_INTEL_VENDOR_ID, IXGBE_DEV_ID_82599_VF, 0, 0, 0},
 	{IXGBE_INTEL_VENDOR_ID, IXGBE_DEV_ID_X540_VF, 0, 0, 0},
@@ -154,7 +154,7 @@ static void     ixv_handle_link(void *);
 static void	ixv_handle_que_work(struct work *, void *);
 
 const struct sysctlnode *ixv_sysctl_instance(struct adapter *);
-static ixgbe_vendor_info_t *ixv_lookup(const struct pci_attach_args *);
+static const ixgbe_vendor_info_t *ixv_lookup(const struct pci_attach_args *);
 
 /************************************************************************
  * FreeBSD Device Interface Entry Points
@@ -259,10 +259,10 @@ ixv_probe(device_t dev, cfdata_t cf, void *aux)
 #endif
 } /* ixv_probe */
 
-static ixgbe_vendor_info_t *
+static const ixgbe_vendor_info_t *
 ixv_lookup(const struct pci_attach_args *pa)
 {
-	ixgbe_vendor_info_t *ent;
+	const ixgbe_vendor_info_t *ent;
 	pcireg_t subid;
 
 	INIT_DEBUGOUT("ixv_lookup: begin");
@@ -302,7 +302,7 @@ ixv_attach(device_t parent, device_t dev, void *aux)
 	struct ixgbe_hw *hw;
 	int             error = 0;
 	pcireg_t	id, subid;
-	ixgbe_vendor_info_t *ent;
+	const ixgbe_vendor_info_t *ent;
 	const struct pci_attach_args *pa = aux;
 	const char *apivstr;
 	const char *str;
@@ -719,7 +719,7 @@ ixv_init_locked(struct adapter *adapter)
 	struct ifnet	*ifp = adapter->ifp;
 	device_t 	dev = adapter->dev;
 	struct ixgbe_hw *hw = &adapter->hw;
-	struct ix_queue	*que = adapter->queues;
+	struct ix_queue	*que;
 	int             error = 0;
 	uint32_t mask;
 	int i;
@@ -729,6 +729,8 @@ ixv_init_locked(struct adapter *adapter)
 	hw->adapter_stopped = FALSE;
 	hw->mac.ops.stop_adapter(hw);
 	callout_stop(&adapter->timer);
+	for (i = 0, que = adapter->queues; i < adapter->num_queues; i++, que++)
+		que->disabled_count = 0;
 
 	/* reprogram the RAR[0] in case user changed it. */
 	hw->mac.ops.set_rar(hw, 0, hw->mac.addr, 0, IXGBE_RAH_AV);
@@ -798,7 +800,7 @@ ixv_init_locked(struct adapter *adapter)
 
 	/* Set up auto-mask */
 	mask = (1 << adapter->vector);
-	for (i = 0; i < adapter->num_queues; i++, que++)
+	for (i = 0, que = adapter->queues; i < adapter->num_queues; i++, que++)
 		mask |= (1 << que->msix);
 	IXGBE_WRITE_REG(hw, IXGBE_VTEIAM, mask);
 
@@ -871,12 +873,14 @@ out:
 	mutex_exit(&que->dc_mtx);
 } /* ixv_disable_queue */
 
+#if 0
 static inline void
 ixv_rearm_queues(struct adapter *adapter, u64 queues)
 {
 	u32 mask = (IXGBE_EIMS_RTX_QUEUE & queues);
 	IXGBE_WRITE_REG(&adapter->hw, IXGBE_VTEICS, mask);
 } /* ixv_rearm_queues */
+#endif
 
 
 /************************************************************************
@@ -1264,9 +1268,11 @@ ixv_local_timer_locked(void *arg)
 	/* Only truly watchdog if all queues show hung */
 	if (hung == adapter->num_queues)
 		goto watchdog;
+#if 0
 	else if (queues != 0) { /* Force an IRQ on queues with work */
 		ixv_rearm_queues(adapter, queues);
 	}
+#endif
 
 	callout_reset(&adapter->timer, hz, ixv_local_timer, adapter);
 

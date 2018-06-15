@@ -1,4 +1,4 @@
-#	$NetBSD: mi,v 1.2197 2018/05/27 21:09:39 maya Exp $
+#	$NetBSD: mi,v 1.2203 2018/06/03 22:32:57 pgoyette Exp $
 #
 # Note: don't delete entries from here - mark them as "obsolete" instead.
 ./etc/mtree/set.comp				comp-sys-root
@@ -3772,6 +3772,8 @@
 ./usr/lib/libz_p.a				comp-c-proflib		compatfile,profile
 ./usr/lib/libzfs.a				comp-zfs-lib		compatfile,zfs
 ./usr/lib/libzfs_p.a				comp-zfs-proflib	compatfile,zfs,profile
+./usr/lib/libzfs_core.a				comp-zfs-lib		compatfile,zfs
+./usr/lib/libzfs_core_p.a			comp-zfs-proflib	compatfile,zfs,profile
 ./usr/lib/libzpool.a				comp-zfs-lib		compatfile,zfs
 ./usr/lib/libzpool_p.a				comp-zfs-proflib	compatfile,zfs,profile
 ./usr/lib/pkgconfig				comp-c-lib
@@ -10415,6 +10417,7 @@
 ./usr/share/man/cat9/arpresolve.0		comp-sys-catman		.cat
 ./usr/share/man/cat9/atop.0			comp-sys-catman		.cat
 ./usr/share/man/cat9/audio.0			comp-sys-catman		.cat
+./usr/share/man/cat9/audio_system.0		comp-sys-catman		.cat
 ./usr/share/man/cat9/autoconf.0			comp-sys-catman		.cat
 ./usr/share/man/cat9/bawrite.0			comp-sys-catman		.cat
 ./usr/share/man/cat9/bcdtobin.0			comp-sys-catman		.cat
@@ -11118,14 +11121,23 @@
 ./usr/share/man/cat9/module_autoload.0		comp-sys-catman		.cat
 ./usr/share/man/cat9/module_builtin_require_force.0 comp-sys-catman	.cat
 ./usr/share/man/cat9/module_find_section.0	comp-sys-catman		.cat
+./usr/share/man/cat9/module_getspecific.0	comp-sys-catman		.cat
 ./usr/share/man/cat9/module_hold.0		comp-sys-catman		.cat
 ./usr/share/man/cat9/module_init.0		comp-sys-catman		.cat
 ./usr/share/man/cat9/module_init_class.0	comp-sys-catman		.cat
 ./usr/share/man/cat9/module_load.0		comp-sys-catman		.cat
+./usr/share/man/cat9/module_kernel.0		comp-sys-catman		.cat
 ./usr/share/man/cat9/module_load_vfs_init.0	comp-sys-catman		.cat
+./usr/share/man/cat9/module_name.0		comp-sys-catman		.cat
 ./usr/share/man/cat9/module_rele.0		comp-sys-catman		.cat
+./usr/share/man/cat9/module_register_callbacks.0 	comp-sys-catman		.cat
+./usr/share/man/cat9/module_setspecific.0	comp-sys-catman		.cat
+./usr/share/man/cat9/module_source.0		comp-sys-catman		.cat
+./usr/share/man/cat9/module_specific_key_create.0 comp-sys-catman	.cat
+./usr/share/man/cat9/module_specific_key_delete.0 comp-sys-catman	.cat
 ./usr/share/man/cat9/module_start_unload_thread.0 comp-sys-catman	.cat
 ./usr/share/man/cat9/module_unload.0		comp-sys-catman		.cat
+./usr/share/man/cat9/module_unregister_callbacks.0 comp-sys-catman		.cat
 ./usr/share/man/cat9/mono_time.0		comp-obsolete		obsolete
 ./usr/share/man/cat9/mstohz.0			comp-sys-catman		.cat
 ./usr/share/man/cat9/mtocl.0			comp-sys-catman		.cat
@@ -11538,6 +11550,17 @@
 ./usr/share/man/cat9/softintr_disestablish.0	comp-sys-catman		.cat
 ./usr/share/man/cat9/softintr_establish.0	comp-sys-catman		.cat
 ./usr/share/man/cat9/softintr_schedule.0	comp-sys-catman		.cat
+./usr/share/man/cat9/specificdata.0		comp-sys-catman		.cat
+./usr/share/man/cat9/specificdata_domain_create.0 comp-sys-catman	.cat
+./usr/share/man/cat9/specificdata_domain_delete.0 comp-sys-catman	.cat
+./usr/share/man/cat9/specificdata_fini.0	comp-sys-catman		.cat
+./usr/share/man/cat9/specificdata_getspecific.0	comp-sys-catman		.cat
+./usr/share/man/cat9/specificdata_getspecific_unlocked.0 comp-sys-catman .cat
+./usr/share/man/cat9/specificdata_init.0	comp-sys-catman		.cat
+./usr/share/man/cat9/specificdata_key_create.0	comp-sys-catman		.cat
+./usr/share/man/cat9/specificdata_key_delete.0	comp-sys-catman		.cat
+./usr/share/man/cat9/specificdata_setspecific.0	comp-sys-catman		.cat
+./usr/share/man/cat9/specificdata_setspecific_nowait.0 comp-sys-catman	.cat
 ./usr/share/man/cat9/spinlockinit.0		comp-sys-catman		.cat
 ./usr/share/man/cat9/spinlockmgr.0		comp-sys-catman		.cat
 ./usr/share/man/cat9/spl.0			comp-sys-catman		.cat
@@ -18123,6 +18146,7 @@
 ./usr/share/man/html9/arpresolve.html		comp-sys-htmlman	html
 ./usr/share/man/html9/atop.html			comp-sys-htmlman	html
 ./usr/share/man/html9/audio.html		comp-sys-htmlman	html
+./usr/share/man/html9/audio_system.html		comp-sys-htmlman	html
 ./usr/share/man/html9/autoconf.html		comp-sys-htmlman	html
 ./usr/share/man/html9/bawrite.html		comp-sys-htmlman	html
 ./usr/share/man/html9/bcdtobin.html		comp-sys-htmlman	html
@@ -18800,15 +18824,24 @@
 ./usr/share/man/html9/module.html		comp-sys-htmlman	html
 ./usr/share/man/html9/module_autoload.html	comp-sys-htmlman	html
 ./usr/share/man/html9/module_builtin_require_force.html comp-sys-htmlman html
+./usr/share/man/html9/module_specific_key_create.html comp-sys-htmlman	html
+./usr/share/man/html9/module_specific_key_delete.html comp-sys-htmlman	html
 ./usr/share/man/html9/module_find_section.html	comp-sys-htmlman	html
+./usr/share/man/html9/module_getspecific.html	comp-sys-htmlman	html
 ./usr/share/man/html9/module_hold.html		comp-sys-htmlman	html
 ./usr/share/man/html9/module_init.html		comp-sys-htmlman	html
 ./usr/share/man/html9/module_init_class.html	comp-sys-htmlman	html
 ./usr/share/man/html9/module_load.html		comp-sys-htmlman	html
+./usr/share/man/html9/module_kernel.html	comp-sys-htmlman	html
 ./usr/share/man/html9/module_load_vfs_init.html comp-sys-htmlman	html
+./usr/share/man/html9/module_name.html		comp-sys-htmlman	html
 ./usr/share/man/html9/module_rele.html		comp-sys-htmlman	html
+./usr/share/man/html9/module_register_callbacks.html comp-sys-htmlman	html
+./usr/share/man/html9/module_setspecific.html	comp-sys-htmlman	html
+./usr/share/man/html9/module_source.html	comp-sys-htmlman	html
 ./usr/share/man/html9/module_start_unload_thread.html comp-sys-htmlman	html
 ./usr/share/man/html9/module_unload.html	comp-sys-htmlman	html
+./usr/share/man/html9/module_unregister_callbacks.html comp-sys-htmlman	html
 ./usr/share/man/html9/mstohz.html		comp-sys-htmlman	html
 ./usr/share/man/html9/mtocl.html		comp-sys-htmlman	html
 ./usr/share/man/html9/mtod.html			comp-sys-htmlman	html
@@ -19199,6 +19232,17 @@
 ./usr/share/man/html9/softintr_disestablish.html	comp-sys-htmlman	html
 ./usr/share/man/html9/softintr_establish.html	comp-sys-htmlman	html
 ./usr/share/man/html9/softintr_schedule.html	comp-sys-htmlman	html
+./usr/share/man/html9/specificdata.html		comp-sys-htmlman	html
+./usr/share/man/html9/specificdata_domain_create.html comp-sys-htmlman	html
+./usr/share/man/html9/specificdata_domain_delete.html comp-sys-htmlman	html
+./usr/share/man/html9/specificdata_fini.html	comp-sys-htmlman	html
+./usr/share/man/html9/specificdata_getspecific.html comp-sys-htmlman	html
+./usr/share/man/html9/specificdata_getspecific_unlocked.html comp-sys-htmlman html
+./usr/share/man/html9/specificdata_init.html	comp-sys-htmlman	html
+./usr/share/man/html9/specificdata_key_create.html comp-sys-htmlman	html
+./usr/share/man/html9/specificdata_key_delete.html comp-sys-htmlman	html
+./usr/share/man/html9/specificdata_setspecific.html comp-sys-htmlman	html
+./usr/share/man/html9/specificdata_setspecific_nowait.html comp-sys-htmlman html
 ./usr/share/man/html9/spinlockinit.html		comp-sys-htmlman	html
 ./usr/share/man/html9/spinlockmgr.html		comp-sys-htmlman	html
 ./usr/share/man/html9/spl.html			comp-sys-htmlman	html
@@ -25935,6 +25979,7 @@
 ./usr/share/man/man9/arpresolve.9		comp-sys-man		.man
 ./usr/share/man/man9/atop.9			comp-sys-man		.man
 ./usr/share/man/man9/audio.9			comp-sys-man		.man
+./usr/share/man/man9/audio_system.9		comp-sys-man		.man
 ./usr/share/man/man9/autoconf.9			comp-sys-man		.man
 ./usr/share/man/man9/bawrite.9			comp-sys-man		.man
 ./usr/share/man/man9/bcdtobin.9			comp-sys-man		.man
@@ -26638,14 +26683,23 @@
 ./usr/share/man/man9/module_autoload.9		comp-sys-man		.man
 ./usr/share/man/man9/module_builtin_require_force.9 comp-sys-man	.man
 ./usr/share/man/man9/module_find_section.9	comp-sys-man		.man
+./usr/share/man/man9/module_getspecific.9	comp-sys-man		.man
 ./usr/share/man/man9/module_hold.9		comp-sys-man		.man
 ./usr/share/man/man9/module_init.9		comp-sys-man		.man
 ./usr/share/man/man9/module_init_class.9	comp-sys-man		.man
 ./usr/share/man/man9/module_load.9		comp-sys-man		.man
+./usr/share/man/man9/module_kernel.9		comp-sys-man		.man
 ./usr/share/man/man9/module_load_vfs_init.9	comp-sys-man		.man
+./usr/share/man/man9/module_name.9		comp-sys-man		.man
 ./usr/share/man/man9/module_rele.9		comp-sys-man		.man
+./usr/share/man/man9/module_register_callbacks.9 	comp-sys-man		.man
+./usr/share/man/man9/module_setspecific.9	comp-sys-man		.man
+./usr/share/man/man9/module_source.9		comp-sys-man		.man
+./usr/share/man/man9/module_specific_key_create.9 comp-sys-man		.man
+./usr/share/man/man9/module_specific_key_delete.9 comp-sys-man		.man
 ./usr/share/man/man9/module_start_unload_thread.9 comp-sys-man		.man
 ./usr/share/man/man9/module_unload.9		comp-sys-man		.man
+./usr/share/man/man9/module_unregister_callbacks.9 comp-sys-man		.man
 ./usr/share/man/man9/mono_time.9		comp-obsolete		obsolete
 ./usr/share/man/man9/mstohz.9			comp-sys-man		.man
 ./usr/share/man/man9/mtocl.9			comp-sys-man		.man
@@ -27058,6 +27112,17 @@
 ./usr/share/man/man9/softintr_disestablish.9	comp-sys-man		.man
 ./usr/share/man/man9/softintr_establish.9	comp-sys-man		.man
 ./usr/share/man/man9/softintr_schedule.9	comp-sys-man		.man
+./usr/share/man/man9/specificdata.9		comp-sys-man		.man
+./usr/share/man/man9/specificdata_domain_create.9 comp-sys-man		.man
+./usr/share/man/man9/specificdata_domain_delete.9 comp-sys-man		.man
+./usr/share/man/man9/specificdata_fini.9	comp-sys-man		.man
+./usr/share/man/man9/specificdata_getspecific.9	comp-sys-man		.man
+./usr/share/man/man9/specificdata_getspecific_unlocked.9 comp-sys-man	.man
+./usr/share/man/man9/specificdata_init.9	comp-sys-man		.man
+./usr/share/man/man9/specificdata_key_create.9	comp-sys-man		.man
+./usr/share/man/man9/specificdata_key_delete.9	comp-sys-man		.man
+./usr/share/man/man9/specificdata_setspecific.9	comp-sys-man		.man
+./usr/share/man/man9/specificdata_setspecific_nowait.9 comp-sys-man	.man
 ./usr/share/man/man9/spinlockinit.9		comp-sys-man		.man
 ./usr/share/man/man9/spinlockmgr.9		comp-sys-man		.man
 ./usr/share/man/man9/spl.9			comp-sys-man		.man

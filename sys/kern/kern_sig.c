@@ -1,4 +1,4 @@
-/*	$NetBSD: kern_sig.c,v 1.347 2018/05/20 04:00:35 kamil Exp $	*/
+/*	$NetBSD: kern_sig.c,v 1.349 2018/05/28 14:07:37 kamil Exp $	*/
 
 /*-
  * Copyright (c) 2006, 2007, 2008 The NetBSD Foundation, Inc.
@@ -70,7 +70,7 @@
  */
 
 #include <sys/cdefs.h>
-__KERNEL_RCSID(0, "$NetBSD: kern_sig.c,v 1.347 2018/05/20 04:00:35 kamil Exp $");
+__KERNEL_RCSID(0, "$NetBSD: kern_sig.c,v 1.349 2018/05/28 14:07:37 kamil Exp $");
 
 #include "opt_ptrace.h"
 #include "opt_dtrace.h"

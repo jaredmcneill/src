@@ -1,4 +1,4 @@
-/* $NetBSD: fdtbus.c,v 1.16 2018/04/07 18:05:08 bouyer Exp $ */
+/* $NetBSD: fdtbus.c,v 1.17 2018/06/12 00:19:17 jmcneill Exp $ */
 
 /*-
  * Copyright (c) 2015 Jared D. McNeill <jmcneill@invisible.ca>
@@ -27,7 +27,7 @@
  */
 
 #include <sys/cdefs.h>
-__KERNEL_RCSID(0, "$NetBSD: fdtbus.c,v 1.16 2018/04/07 18:05:08 bouyer Exp $");
+__KERNEL_RCSID(0, "$NetBSD: fdtbus.c,v 1.17 2018/06/12 00:19:17 jmcneill Exp $");
 
 #include <sys/param.h>
 #include <sys/systm.h>

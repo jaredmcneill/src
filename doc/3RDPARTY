@@ -1,4 +1,4 @@
-#	$NetBSD: 3RDPARTY,v 1.1524 2018/05/21 14:48:55 taca Exp $
+#	$NetBSD: 3RDPARTY,v 1.1528 2018/06/07 05:48:29 maya Exp $
 #
 # This file contains a list of the software that has been integrated into
 # NetBSD where we are not the primary maintainer.
@@ -334,8 +334,8 @@ Notes:
 Use the dhcp2netbsd script.
 
 Package:	dhcpcd
-Version:	7.0.4
-Current Vers:	7.0.4
+Version:	7.0.5b
+Current Vers:	7.0.5b
 Maintainer:	roy
 Archive Site:	ftp://roy.marples.name/pub/dhcpcd/
 Home Page:	http://roy.marples.name/projects/dhcpcd/
@@ -1285,7 +1285,7 @@ original.
 
 Package:	sqlite
 Version:	3.17.0
-Current Vers:	3.22
+Current Vers:	3.24
 Maintainer:	Richard Hipp <drh@sqlite.org>
 Home Page:	http://www.sqlite.org
 Responsible:	joerg

@@ -1,4 +1,4 @@
-#	$NetBSD: bsd.own.mk,v 1.1061 2018/05/09 21:26:59 joerg Exp $
+#	$NetBSD: bsd.own.mk,v 1.1064 2018/06/02 14:30:35 christos Exp $
 
 # This needs to be before bsd.init.mk
 .if defined(BSD_MK_COMPAT_FILE)
@@ -939,7 +939,8 @@ dependall:	.NOTMAIN realdepend .MAKE
 #
 .for var in \
 	NOCRYPTO NODOC NOHTML NOINFO NOLINKLIB NOLINT NOMAN NONLS NOOBJ NOPIC \
-	NOPICINSTALL NOPROFILE NOSHARE NOSTATICLIB NODEBUGLIB
+	NOPICINSTALL NOPROFILE NOSHARE NOSTATICLIB NODEBUGLIB NOSANITIZER \
+	NORELRO
 .if defined(${var})
 MK${var:S/^NO//}:=	no
 .endif
@@ -1091,6 +1092,12 @@ _MKVARS.yes += MKGCCCMDS
 MKGCCCMDS?=	${MKGCC}
 
 #
+# Sanitizers, only "address" and "undefined" are supported by gcc
+#
+MKSANITIZER?=	no
+USE_SANITIZER?=	address
+
+#
 # Exceptions to the above:
 #
 
@@ -1123,6 +1130,27 @@ MKDYNAMICROOT=	no
 MKARZERO ?= ${MKREPRO}
 .endif
 
+# Only install the general firmware on some systems
+MKFIRMWARE.amd64=		yes
+MKFIRMWARE.cobalt=		yes
+MKFIRMWARE.evbarm=		yes
+MKFIRMWARE.evbmips=		yes
+MKFIRMWARE.evbppc=		yes
+MKFIRMWARE.hpcarm=		yes
+MKFIRMWARE.hppa=		yes
+MKFIRMWARE.i386=		yes
+MKFIRMWARE.mac68k=		yes
+MKFIRMWARE.macppc=		yes
+MKFIRMWARE.sandpoint=		yes
+MKFIRMWARE.sparc64=		yes
+
+# Only install the radeon firmware on DRM-happy systems.
+MKRADEONFIRMWARE.x86_64=	yes
+MKRADEONFIRMWARE.i386=		yes
+
+# Only install the tegra firmware on evbarm.
+MKTEGRAFIRMWARE.evbarm=		yes
+
 #
 # MK* options which default to "no".  Note that MKZFS has a different
 # default for some platforms, see above.  Please keep alphabetically
@@ -1134,6 +1162,7 @@ _MKVARS.no= \
 	MKCATPAGES MKCOMPATTESTS MKCOMPATX11 MKCTF \
 	MKDEBUG MKDEBUGLIB MKDTRACE \
 	MKEXTSRC \
+	MKFIRMWARE \
 	MKGROFFHTMLDOC \
 	MKKYUA \
 	MKLIBCXX MKLLD MKLLDB MKLLVM MKLINT \
@@ -1190,17 +1219,6 @@ MKSLJIT=	yes
     ${MACHINE} == "vax"		|| \
     ${MACHINE} == "zaurus"
 MKXORG_SERVER=yes
-.else
-.endif
-
-# Only install the radeon firmware on DRM-happy systems.
-.if ${MACHINE_ARCH} == "x86_64" || ${MACHINE_ARCH} == "i386"
-MKRADEONFIRMWARE=		yes
-.endif
-
-# Only install the tegra firmware on evbarm.
-.if ${MACHINE} == "evbarm"
-MKTEGRAFIRMWARE=		yes
 .endif
 
 #

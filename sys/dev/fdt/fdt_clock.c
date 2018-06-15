@@ -1,4 +1,4 @@
-/* $NetBSD: fdt_clock.c,v 1.1 2015/12/22 21:42:11 jmcneill Exp $ */
+/* $NetBSD: fdt_clock.c,v 1.3 2018/06/12 10:28:55 jmcneill Exp $ */
 
 /*-
  * Copyright (c) 2015 Jared D. McNeill <jmcneill@invisible.ca>
@@ -27,7 +27,7 @@
  */
 
 #include <sys/cdefs.h>
-__KERNEL_RCSID(0, "$NetBSD: fdt_clock.c,v 1.1 2015/12/22 21:42:11 jmcneill Exp $");
+__KERNEL_RCSID(0, "$NetBSD: fdt_clock.c,v 1.3 2018/06/12 10:28:55 jmcneill Exp $");
 
 #include <sys/param.h>
 #include <sys/bus.h>

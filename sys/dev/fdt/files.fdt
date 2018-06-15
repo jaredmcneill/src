@@ -1,4 +1,4 @@
-# $NetBSD: files.fdt,v 1.27 2018/05/27 17:14:23 jmcneill Exp $
+# $NetBSD: files.fdt,v 1.31 2018/06/15 19:52:01 jakllsch Exp $
 
 include	"external/bsd/libfdt/conf/files.libfdt"
 
@@ -80,6 +80,10 @@ file	dev/fdt/ausoc.c				ausoc
 define	fdt_display_timing
 file	dev/fdt/display_timing.c		fdt_display_timing
 
+# Display controller
+attach	genfb at fdt with simplefb
+file	dev/fdt/simplefb.c			simplefb
+
 # Designware APB UART
 attach	com at fdt with dw_apb_uart
 file	dev/fdt/dw_apb_uart.c			dw_apb_uart
@@ -95,3 +99,16 @@ file	dev/fdt/dwc3_fdt.c			dwc3_fdt
 # Designware SD/MMC
 attach	dwcmmc at fdt with dwcmmc_fdt
 file	dev/fdt/dwcmmc_fdt.c			dwcmmc_fdt
+
+# Virtio virtio,mmio
+attach	virtio at fdt with virtio_mmio_fdt:	virtio_mmio
+file	dev/fdt/virtio_mmio_fdt.c		virtio_mmio_fdt
+
+# QEMU Firmware Configuration (fw_cfg) device
+attach 	qemufwcfg at fdt with qemufwcfg_fdt
+file	dev/fdt/qemufwcfg_fdt.c			qemufwcfg_fdt
+
+# ARM PrimeCell  General Purpose Input/Output (PL061)
+device	pl061gpio: gpiobus
+attach 	pl061gpio at fdt with pl061gpio_fdt
+file	dev/fdt/pl061gpio_fdt.c			pl061gpio_fdt

@@ -1,4 +1,4 @@
-# $NetBSD: mi,v 1.1590 2018/05/27 05:31:20 thorpej Exp $
+# $NetBSD: mi,v 1.1594 2018/06/13 03:28:36 ozaki-r Exp $
 #
 # Note: don't delete entries from here - mark them as "obsolete" instead.
 #
@@ -1088,7 +1088,7 @@
 ./usr/share/man/cat4/ex.0			man-sys-catman		.cat
 ./usr/share/man/cat4/exphy.0			man-sys-catman		.cat
 ./usr/share/man/cat4/faith.0			man-sys-catman		.cat
-./usr/share/man/cat4/fast_ipsec.0		man-sys-catman		.cat
+./usr/share/man/cat4/fast_ipsec.0		man-obsolete		obsolete
 ./usr/share/man/cat4/fd.0			man-sys-catman		.cat
 ./usr/share/man/cat4/fea.0			man-sys-catman		.cat
 ./usr/share/man/cat4/filemon.0			man-sys-catman		.cat
@@ -2270,7 +2270,7 @@
 ./usr/share/man/cat5/wtmpx.0			man-sys-catman		.cat
 ./usr/share/man/cat5/ypserv.acl.0		man-obsolete		obsolete
 ./usr/share/man/cat7/ascii.0			man-reference-catman	.cat
-./usr/share/man/cat7/audio.0			man-reference-catman	.cat
+./usr/share/man/cat7/audio.0			man-obsolete		obsolete
 ./usr/share/man/cat7/atf.0			man-atf-catman		.cat,atf
 ./usr/share/man/cat7/c.0			man-reference-catman	.cat
 ./usr/share/man/cat7/c78.0			man-reference-catman	.cat
@@ -2317,6 +2317,7 @@
 ./usr/share/man/cat7/symlink.0			man-reference-catman	.cat
 ./usr/share/man/cat7/sysctl.0			man-reference-catman	.cat
 ./usr/share/man/cat7/tests.0			man-reference-catman	.cat
+./usr/share/man/cat7/zpool-features.0		man-zfs-catman		zfs,.cat
 ./usr/share/man/cat8/MAKEDEV.0			man-sysutil-catman	.cat
 ./usr/share/man/cat8/MAKEDEV.local.0		man-sysutil-catman	.cat
 ./usr/share/man/cat8/ac.0			man-sysutil-catman	.cat
@@ -4232,7 +4233,7 @@
 ./usr/share/man/html4/ex.html			man-sys-htmlman		html
 ./usr/share/man/html4/exphy.html		man-sys-htmlman		html
 ./usr/share/man/html4/faith.html		man-sys-htmlman		html
-./usr/share/man/html4/fast_ipsec.html		man-sys-htmlman		html
+./usr/share/man/html4/fast_ipsec.html		man-obsolete		obsolete
 ./usr/share/man/html4/fd.html			man-sys-htmlman		html
 ./usr/share/man/html4/fea.html			man-sys-htmlman		html
 ./usr/share/man/html4/filemon.html		man-sys-htmlman		html
@@ -5315,7 +5316,7 @@
 ./usr/share/man/html5/wtmp.html			man-sys-htmlman		html
 ./usr/share/man/html5/wtmpx.html		man-sys-htmlman		html
 ./usr/share/man/html7/ascii.html		man-reference-htmlman	html
-./usr/share/man/html7/audio.html		man-reference-htmlman	html
+./usr/share/man/html7/audio.html		man-obsolete		obsolete
 ./usr/share/man/html7/atf.html			man-atf-htmlman		html,atf
 ./usr/share/man/html7/c.html			man-reference-htmlman	html
 ./usr/share/man/html7/c78.html			man-reference-htmlman	html
@@ -5358,6 +5359,7 @@
 ./usr/share/man/html7/symlink.html		man-reference-htmlman	html
 ./usr/share/man/html7/sysctl.html		man-reference-htmlman	html
 ./usr/share/man/html7/tests.html		man-reference-htmlman	html
+./usr/share/man/html7/zpool-features.html	man-zfs-htmlman		zfs,html
 ./usr/share/man/html8/MAKEDEV.html		man-sysutil-htmlman	html
 ./usr/share/man/html8/MAKEDEV.local.html	man-sysutil-htmlman	html
 ./usr/share/man/html8/ac.html			man-sysutil-htmlman	html
@@ -7148,7 +7150,7 @@
 ./usr/share/man/man4/ex.4			man-sys-man		.man
 ./usr/share/man/man4/exphy.4			man-sys-man		.man
 ./usr/share/man/man4/faith.4			man-sys-man		.man
-./usr/share/man/man4/fast_ipsec.4		man-sys-man		.man
+./usr/share/man/man4/fast_ipsec.4		man-obsolete		obsolete
 ./usr/share/man/man4/fd.4			man-sys-man		.man
 ./usr/share/man/man4/fea.4			man-sys-man		.man
 ./usr/share/man/man4/filemon.4			man-sys-man		.man
@@ -8330,7 +8332,7 @@
 ./usr/share/man/man5/wtmpx.5			man-sys-man		.man
 ./usr/share/man/man5/ypserv.acl.5		man-obsolete		obsolete
 ./usr/share/man/man7/ascii.7			man-reference-man	.man
-./usr/share/man/man7/audio.7			man-reference-man	.man
+./usr/share/man/man7/audio.7			man-obsolete		obsolete
 ./usr/share/man/man7/atf.7			man-atf-man		.man,atf
 ./usr/share/man/man7/c.7			man-reference-man	.man
 ./usr/share/man/man7/c78.7			man-reference-man	.man
@@ -8376,6 +8378,7 @@
 ./usr/share/man/man7/symlink.7			man-reference-man	.man
 ./usr/share/man/man7/sysctl.7			man-reference-man	.man
 ./usr/share/man/man7/tests.7			man-reference-man	.man
+./usr/share/man/man7/zpool-features.7		man-zfs-man		zfs,.man
 ./usr/share/man/man8/MAKEDEV.8			man-sysutil-man		.man
 ./usr/share/man/man8/MAKEDEV.local.8		man-sysutil-man		.man
 ./usr/share/man/man8/ac.8			man-sysutil-man		.man

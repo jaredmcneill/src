@@ -1,6 +1,7 @@
-#	$NetBSD: Makefile,v 1.5 2018/02/14 03:37:39 christos Exp $
+#	$NetBSD: Makefile,v 1.7 2018/06/11 15:29:33 christos Exp $
 
 UNSUPPORTED_COMPILER.clang=	# defined
+LIBISCXX = yes
 
 .include <bsd.own.mk>
 
