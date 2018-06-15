@@ -46,6 +46,7 @@ __KERNEL_RCSID(0, "$NetBSD: virt_platform.c,v 1.2 2018/06/15 14:37:35 jakllsch E
 
 #include <machine/bootconfig.h>
 #include <arm/cpufunc.h>
+#include <arm/locore.h>
 
 #include <evbarm/dev/plcomreg.h>
 #include <evbarm/dev/plcomvar.h>
