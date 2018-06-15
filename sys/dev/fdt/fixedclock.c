@@ -89,6 +89,11 @@ fixedclock_attach(device_t parent, device_t self, void *aux)
 	struct fixedclock_softc * const sc = device_private(self);
 	const struct fdt_attach_args *faa = aux;
 	const int phandle = faa->faa_phandle;
+	const char *clkname;
+
+	clkname = fdtbus_get_string(phandle, "clock-output-names");
+	if (!clkname)
+		clkname = faa->faa_name;
 
 	sc->sc_dev = self;
 	sc->sc_phandle = phandle;
@@ -101,11 +106,11 @@ fixedclock_attach(device_t parent, device_t self, void *aux)
 		return;
 	}
 	sc->sc_clk.base.domain = &sc->sc_clkdom;
-	sc->sc_clk.base.name = kmem_asprintf("%s", faa->faa_name);
+	sc->sc_clk.base.name = kmem_asprintf("%s", clkname);
 	clk_attach(&sc->sc_clk.base);
 
 	aprint_naive("\n");
-	aprint_normal(": %u Hz fixed clock\n", sc->sc_clk.rate);
+	aprint_normal(": %u Hz fixed clock (%s)\n", sc->sc_clk.rate, clkname);
 
 	fdtbus_register_clock_controller(self, phandle, &fixedclock_fdt_funcs);
 }
