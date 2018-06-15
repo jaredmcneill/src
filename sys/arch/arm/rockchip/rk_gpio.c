@@ -166,7 +166,7 @@ rk_gpio_read(device_t dev, void *priv, bool raw)
 	const uint32_t data_mask = __BIT(pin->pin_nr);
 
 	/* No lock required for reads */
-	data = RD4(sc, GPIO_SWPORTA_DR_REG);
+	data = RD4(sc, GPIO_EXT_PORTA_REG);
 	val = __SHIFTOUT(data, data_mask);
 	if (!raw && pin->pin_actlo)
 		val = !val;
