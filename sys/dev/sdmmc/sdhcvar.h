@@ -86,6 +86,8 @@ struct sdhc_softc {
 	int (*sc_vendor_transfer_data_dma)(struct sdhc_softc *, struct sdmmc_command *);
 	void (*sc_vendor_hw_reset)(struct sdhc_softc *, struct sdhc_host *);
 	int (*sc_vendor_signal_voltage)(struct sdhc_softc *, int);
+
+	u_int			sc_write_delay; /* delay (us) after io write */
 };
 
 /* Host controller functions called by the attachment driver. */

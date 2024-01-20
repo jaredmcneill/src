@@ -142,6 +142,9 @@ hwrite1(struct sdhc_host *hp, bus_size_t o, uint8_t val)
 		tmp = (val << shift) | (tmp & ~(0xffU << shift));
 		bus_space_write_4(hp->iot, hp->ioh, o, tmp);
 	}
+	if (hp->sc->sc_write_delay != 0) {
+		delay(hp->sc->sc_write_delay);
+	}
 }
 
 static void
@@ -157,6 +160,9 @@ hwrite2(struct sdhc_host *hp, bus_size_t o, uint16_t val)
 		tmp = (val << shift) | (tmp & ~(0xffffU << shift));
 		bus_space_write_4(hp->iot, hp->ioh, o, tmp);
 	}
+	if (hp->sc->sc_write_delay != 0) {
+		delay(hp->sc->sc_write_delay);
+	}
 }
 
 static void
@@ -164,6 +170,9 @@ hwrite4(struct sdhc_host *hp, bus_size_t o, uint32_t val)
 {
 
 	bus_space_write_4(hp->iot, hp->ioh, o, val);
+	if (hp->sc->sc_write_delay != 0) {
+		delay(hp->sc->sc_write_delay);
+	}
 }
 
 #define HWRITE1(hp, reg, val)		hwrite1(hp, reg, val)
