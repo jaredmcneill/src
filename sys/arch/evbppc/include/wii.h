@@ -94,9 +94,9 @@
 #define ARM_START			0x13400000
 #define ARM_SIZE			0x00c00000
 
-#define BUS_FREQ_HZ			243000000
-#define CPU_FREQ_HZ			(BUS_FREQ_HZ * 3)
-#define TIMEBASE_FREQ_HZ		(BUS_FREQ_HZ / 4)
+#define WII_BUS_FREQ_HZ			243000000
+#define WII_CPU_FREQ_HZ			(WII_BUS_FREQ_HZ * 3)
+#define WII_TIMEBASE_FREQ_HZ		(WII_BUS_FREQ_HZ / 4)
 
 /* Global memory structure */
 #define GLOBAL_MEM1_SIZE		(GLOBAL_BASE + 0x0028)

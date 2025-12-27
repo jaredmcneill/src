@@ -97,6 +97,7 @@ __KERNEL_RCSID(0, "$NetBSD: machdep.c,v 1.12 2025/11/15 17:59:23 jmcneill Exp $"
 
 #include <machine/powerpc.h>
 #include <machine/wii.h>
+#include <machine/wiiu.h>
 #include "dev/gecko.h"
 
 #include <powerpc/bus_funcs.h>
@@ -221,28 +222,35 @@ struct powerpc_bus_dma_tag wii_mem2_bus_dma_tag = {
 /*
  * Global variables used here and there
  */
-struct mem_region physmemr[3], availmemr[3];
+struct mem_region physmemr[4], availmemr[4];
 char wii_cmdline[1024];
+bool wiiu_plat;		/* Running on a Wii U */
+bool wiiu_native;	/* Native Wii U mode (not vWii) */
 
 void initppc(u_int, u_int, u_int, void *); /* Called from locore */
 void wii_dolphin_elf_loader_id(void);
 
 static void wii_setup(void);
+static void wiiu_setup(void);
 static void init_decrementer(void);
 
-void
-initppc(u_int startkernel, u_int endkernel, u_int args, void *btinfo)
+static void
+system_detect(void)
 {
-	extern uint32_t ticks_per_sec;
-	extern uint32_t ticks_per_msec;
-	extern unsigned char edata[], end[];
+	uint32_t val;
+
+	val = in32(LT_CHIPREVID);
+	if (__SHIFTOUT(val, LT_CHIPREVID_MAGIC) == LT_CHIPREVID_MAGIC_CAFE) {
+		wiiu_plat = true;
+		wiiu_native = (in32(LT_PIMCOMPAT) & PPC_COMPAT) == 0;
+	}
+}
+
+static void
+wii_init_cmdline(void)
+{
 	extern struct wii_argv wii_argv;
-	uint32_t mem2_start, mem2_end;
-	register_t scratch;
 
-	memset(&edata, 0, end - edata); /* clear BSS */
-
-	wii_cmdline[0] = '\0';
 	if (wii_argv.magic == WII_ARGV_MAGIC) {
 		void *ptr = (void *)(uintptr_t)(wii_argv.cmdline & ~0x80000000);
 		if (ptr != NULL) {
@@ -251,6 +259,12 @@ initppc(u_int startkernel, u_int endkernel, u_int args, void *btinfo)
 	} else {
 		snprintf(wii_cmdline, sizeof(wii_cmdline), WII_DEFAULT_CMDLINE);
 	}
+}
+
+static void
+wii_init_memmap(u_int endkernel)
+{
+	uint32_t mem2_start, mem2_end;
 
 	mem2_start = in32(GLOBAL_MEM2_AVAIL_START) & ~0x80000000;
 	mem2_end = in32(GLOBAL_MEM2_AVAIL_END) & ~0x80000000;
@@ -287,6 +301,70 @@ initppc(u_int startkernel, u_int endkernel, u_int args, void *btinfo)
 	availmemr[1].size = mem2_end - mem2_start;
 
 	availmemr[2].size = 0;
+}
+
+static void
+wiiu_init_cmdline(void)
+{
+	/* TODO */
+	snprintf(wii_cmdline, sizeof(wii_cmdline), WII_DEFAULT_CMDLINE);
+}
+
+static void
+wiiu_init_memmap(u_int endkernel)
+{
+	/* MEM1 32MB */
+	physmemr[0].start  = 0x00000000;
+	physmemr[0].size   = 0x2000000;
+
+	/* MEM0 3MB */
+	physmemr[1].start  = 0x08000000;
+	physmemr[1].size   = 0x300000;
+
+	/* MEM2 2GB */
+	physmemr[2].start  = 0x10000000;
+	physmemr[2].size   = 0x80000000;
+
+	physmemr[3].size   = 0;
+
+	/* MEM1 available memory */
+	availmemr[0].start = physmemr[0].start;
+	availmemr[0].size  = physmemr[0].size;
+
+	/*
+	 * MEM2 available memory. Reserved regions:
+	 *   USB DMA			0x10000000 - 0x103fffff
+	 *   Sound DMA			0x10400000 - 0x1041ffff
+	 *   Framebuffer		0x17500000 - 0x17a7ffff
+	 */
+	availmemr[1].start = 0x10420000;
+	availmemr[1].size  = 0x17500000 - availmemr[1].start;
+	availmemr[2].start = 0x17a80000;
+	availmemr[2].size  = 0x80000000 - availmemr[2].start;
+
+	availmemr[3].size  = 0;
+}
+
+void
+initppc(u_int startkernel, u_int endkernel, u_int args, void *btinfo)
+{
+	extern uint32_t ticks_per_sec;
+	extern uint32_t ticks_per_msec;
+	extern unsigned char edata[], end[];
+	register_t scratch;
+
+	memset(&edata, 0, end - edata); /* clear BSS */
+	wii_cmdline[0] = '\0';
+
+	system_detect();
+
+	if (wiiu_native) {
+		wiiu_init_cmdline();
+		wiiu_init_memmap(endkernel);
+	} else {
+		wii_init_cmdline();
+		wii_init_memmap(endkernel);
+	}
 
 #ifdef BOOTHOWTO
 	/*
@@ -314,9 +392,13 @@ initppc(u_int startkernel, u_int endkernel, u_int args, void *btinfo)
 	/*
 	 * Initialize the BAT registers
 	 */
-	oea_batinit(
-	    EFB_BASE, BAT_BL_128M,
-	    0);
+	if (wiiu_native) {
+		oea_batinit(0);
+	} else {
+		oea_batinit(
+		    EFB_BASE, BAT_BL_128M,
+		    0);
+	}
 
 	/*
 	 * Set up trap vectors
@@ -326,11 +408,16 @@ initppc(u_int startkernel, u_int endkernel, u_int args, void *btinfo)
 	/*
 	 * Get CPU clock
 	 */
-	ticks_per_sec = TIMEBASE_FREQ_HZ;
+	ticks_per_sec = wiiu_native ? WIIU_TIMEBASE_FREQ_HZ :
+				      WII_TIMEBASE_FREQ_HZ;
 	ticks_per_msec = ticks_per_sec / 1000;
 	cpu_timebase = ticks_per_sec;
 
-	wii_setup();
+	if (wiiu_native) {
+		wiiu_setup();
+	} else {
+		wii_setup();
+	}
 
 	uvm_md_init();
 
@@ -457,6 +544,11 @@ wii_setup(void)
 
 	/* Enable DVD video support. */
 	out32(HW_COMPAT, in32(HW_COMPAT) & ~DVDVIDEO);
+}
+
+static void
+wiiu_setup(void)
+{
 }
 
 static void
