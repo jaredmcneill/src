@@ -162,7 +162,7 @@
 #define GPIO_SLOT_LED			5
 #define GPIO_DO_EJECT			9
 
-/* Command line protocol */
+/* HBC command line protocol */
 #define WII_ARGV_MAGIC			0x5f617267
 struct wii_argv {
 	uint32_t	magic;
