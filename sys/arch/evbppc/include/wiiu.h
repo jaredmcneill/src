@@ -53,4 +53,8 @@
 #define LT_PIMCOMPAT			(HOLLYWOOD_PRIV_BASE + 0x5b0)
 #define  PPC_COMPAT			__BIT(5)
 
+/* Declared in sys/arch/evbppc/wii/machdep.c */
+extern bool wiiu_plat;
+extern bool wiiu_native;
+
 #endif /* !_WIIU_H */
