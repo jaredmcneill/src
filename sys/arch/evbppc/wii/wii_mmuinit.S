@@ -141,10 +141,10 @@
 	 */
 	/* BATU(0x10000000, BAT_BL_64M, BAT_Vs) */
 	lis	%r11, 0x1000
-	ori	%r11, %r11, BAT_BL_64M|BAT_Vs
-	/* BATL(0x10000000, BAT_I|BAT_G, BAT_PP_RW) */
+	ori	%r11, %r11, BAT_BL_2G|BAT_Vs
+	/* BATL(0x10000000, BAT_M, BAT_PP_RW) */
 	lis	%r12, 0x1000
-	ori	%r12, %r12, BAT_I|BAT_G|BAT_PP_RW
+	ori	%r12, %r12, BAT_M|BAT_PP_RW
 	mtdbatu	1, %r11
 	mtdbatl	1, %r12
 	isync
