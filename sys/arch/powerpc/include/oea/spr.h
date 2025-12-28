@@ -84,6 +84,7 @@
 #define   IBMPOWER6P5		  0x0f00
 #define   IBMSTB25		  0x5151
 #define	  IBM750FX		  0x7000
+#define   IBM750ESPRESSO	  0x7001
 #define   IBM750GX		  0x7002
 #define	  MPC7450		  0x8000
 #define	  MPC7455		  0x8001

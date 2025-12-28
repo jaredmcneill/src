@@ -211,7 +211,7 @@ static const struct fmttab cpu_l2cr_formats[] = {
 static void cpu_fmttab_print(const struct fmttab *, register_t);
 
 struct cputab {
-	const char name[8];
+	const char name[9];
 	uint16_t version;
 	uint16_t revfmt;
 };
@@ -245,6 +245,7 @@ static const struct cputab models[] = {
 	{ "970FX",	IBM970FX,	REVFMT_MAJMIN },
 	{ "970MP",	IBM970MP,	REVFMT_MAJMIN },
 	{ "POWER3II",   IBMPOWER3II,    REVFMT_MAJMIN },
+	{ "Espresso",	IBM750ESPRESSO, REVFMT_MAJMIN },
 	{ "",		0,		REVFMT_HEX }
 };
 
@@ -427,6 +428,7 @@ cpu_probe_cache(void)
 
 	switch (vers) {
 #define	K	*1024
+	case IBM750ESPRESSO:
 	case IBM750FX:
 	case IBM750GX:
 	case MPC601:
@@ -636,6 +638,7 @@ cpu_setup(device_t self, struct cpu_info *ci)
 		break;
 
 	case MPC750:
+	case IBM750ESPRESSO:
 	case IBM750FX:
 	case IBM750GX:
 		/* Select NAP mode. */
@@ -685,6 +688,7 @@ cpu_setup(device_t self, struct cpu_info *ci)
 
 #ifdef NAPMODE
 	switch (vers) {
+	case IBM750ESPRESSO:
 	case IBM750FX:
 	case IBM750GX:
 	case MPC750:
@@ -697,6 +701,7 @@ cpu_setup(device_t self, struct cpu_info *ci)
 #endif
 
 	switch (vers) {
+	case IBM750ESPRESSO:
 	case IBM750FX:
 	case IBM750GX:
 	case MPC750:
@@ -791,6 +796,7 @@ cpu_setup(device_t self, struct cpu_info *ci)
 	case MPC604e:
 	case MPC604ev:
 	case MPC750:
+	case IBM750ESPRESSO:
 	case IBM750FX:
 	case IBM750GX:
 	case MPC7400:
@@ -810,6 +816,7 @@ cpu_setup(device_t self, struct cpu_info *ci)
 		case MPC7457: /* 7447 does not have L3! */
 			cpu_config_l3cr(vers);
 			break;
+		case IBM750ESPRESSO:
 		case IBM750FX:
 		case IBM750GX:
 		case MPC750:
@@ -1090,6 +1097,7 @@ cpu_config_l2cr(int pvr)
 	aprint_normal(",");
 
 	switch (vers) {
+	case IBM750ESPRESSO:
 	case IBM750FX:
 	case IBM750GX:
 		cpu_fmttab_print(cpu_ibm750_l2cr_formats, l2cr);
