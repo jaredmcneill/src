@@ -57,11 +57,17 @@ static bool	wiiufb_drc;
 #define WIIUFB_STRIDE		((wiiufb_drc ? 896 : 1280) * WIIUFB_BPP / NBBY)
 #define WIIUFB_SIZE		(WIIUFB_STRIDE * WIIUFB_HEIGHT)
 
+#define D1CRTC_BLANK_CONTROL	0x6084
+#define D2CRTC_BLANK_CONTROL	0x6884
+#define  DCRTC_BLANK_DATA_EN	__BIT(8)
+
 struct wiiufb_softc {
 	struct genfb_softc	sc_gen;
 
 	bus_space_tag_t		sc_bst;
 	bus_space_handle_t	sc_bsh;
+
+	uint32_t		sc_blank_ctrl;
 };
 
 static int	wiiufb_match(device_t, cfdata_t, void *);
@@ -70,6 +76,8 @@ static void	wiiufb_attach(device_t, device_t, void *);
 static bool	wiiufb_shutdown(device_t, int);
 static int	wiiufb_ioctl(void *, void *, u_long, void *, int, lwp_t *);
 static paddr_t	wiiufb_mmap(void *, void *, off_t, int);
+
+static void	wiiufb_gpu_write(uint16_t, uint32_t);
 
 void		wiiufb_consinit(void);
 
@@ -137,6 +145,16 @@ wiiufb_attach(device_t parent, device_t self, void *aux)
 	genfb_cnattach();
 	prop_dictionary_set_bool(dict, "is_console", true);
 	genfb_attach(&sc->sc_gen, &wiiufb_ops);
+
+	sc->sc_blank_ctrl = wiiufb_drc ?
+	    D2CRTC_BLANK_CONTROL : D1CRTC_BLANK_CONTROL;
+
+	/* Blank the CRTC we are not using. */
+	if (wiiufb_drc) {
+		wiiufb_gpu_write(D1CRTC_BLANK_CONTROL, DCRTC_BLANK_DATA_EN);
+	} else {
+		wiiufb_gpu_write(D2CRTC_BLANK_CONTROL, DCRTC_BLANK_DATA_EN);
+	}
 }
 
 static bool
@@ -153,6 +171,7 @@ wiiufb_ioctl(void *v, void *vs, u_long cmd, void *data, int flag, lwp_t *l)
 	struct wsdisplayio_bus_id *busid;
 	struct wsdisplayio_fbinfo *fbi;
 	struct rasops_info *ri;
+	u_int video;
 	int error;
 
 	switch (cmd) {
@@ -171,6 +190,19 @@ wiiufb_ioctl(void *v, void *vs, u_long cmd, void *data, int flag, lwp_t *l)
 			fbi->fbi_flags |= WSFB_VRAM_IS_RAM;
 		}
 		return error;
+	case WSDISPLAYIO_SVIDEO:
+		video = *(u_int *)data;
+		switch (video) {
+		case WSDISPLAYIO_VIDEO_OFF:
+			wiiufb_gpu_write(sc->sc_blank_ctrl, DCRTC_BLANK_DATA_EN);
+			break;
+		case WSDISPLAYIO_VIDEO_ON:
+			wiiufb_gpu_write(sc->sc_blank_ctrl, 0);
+			break;
+		default:
+			return EINVAL;
+		}
+		return 0;
 	}
 
 	return EPASSTHROUGH;
@@ -187,6 +219,14 @@ wiiufb_mmap(void *v, void *vs, off_t off, int prot)
 
 	return bus_space_mmap(sc->sc_bst, WIIUFB_BASE, off, prot,
 	    BUS_SPACE_MAP_LINEAR | BUS_DMA_PREFETCHABLE);
+}
+
+static void
+wiiufb_gpu_write(uint16_t reg, uint32_t data)
+{
+	out32(LT_GPUINDADDR, LT_GPUINDADDR_REGSPACE_GPU | reg);
+	out32(LT_GPUINDDATA, data);
+	in32(LT_GPUINDDATA);
 }
 
 void
