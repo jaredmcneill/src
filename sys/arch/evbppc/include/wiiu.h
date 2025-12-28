@@ -74,6 +74,9 @@
 #define LT_PIMCOMPAT			(HOLLYWOOD_PRIV_BASE + 0x5b0)
 #define  PPC_COMPAT			__BIT(5)
 
+/* GPIOs */
+#define WIIU_GPIO_POWER			0
+
 /* Command line protocol */
 #define WIIU_ARGV_MAGIC			0xCAFEFECA
 struct wiiu_argv {

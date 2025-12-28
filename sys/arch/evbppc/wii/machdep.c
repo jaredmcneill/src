@@ -236,6 +236,7 @@ void wii_dolphin_elf_loader_id(void);
 static void wii_setup(void);
 static void wii_poweroff(void);
 static void wii_reset(void);
+static void wii_halt(void);
 static void init_decrementer(void);
 
 static void
@@ -522,12 +523,7 @@ cpu_reboot(int howto, char *what)
 	}
 	if (howto & RB_HALT) {
 		printf("The operating system has halted.\n");
-		printf("Please press the RESET button to reboot.\n");
-		while (1) {
-			if ((in32(PI_INTERRUPT_CAUSE) & RESET_SWITCH_STATE) == 0) {
-				break;
-			}
-		}
+		wii_halt();
 	}
 
 	printf("rebooting...\n\n");
@@ -587,6 +583,31 @@ wii_reset(void)
 		wiiu_wood_ipc(0xcafe0002);
 	} else {
 		out32(HW_RESETS, in32(HW_RESETS) & ~RSTBINB);
+	}
+}
+
+static void
+wii_halt(void)
+{
+	printf("Please press the %s button to reboot.\n",
+	    wiiu_native ? "POWER" : "RESET");
+	if (wiiu_native) {
+		bool pressed = false;
+		while (1) {
+			if ((in32(HW_GPIOB_IN) & __BIT(WIIU_GPIO_POWER)) != 0) {
+				/* Button was pressed */
+				pressed = true;
+			} else if (pressed) {
+				/* Button was released */
+				break;
+			}
+		}
+	} else {
+		while (1) {
+			if ((in32(PI_INTERRUPT_CAUSE) & RESET_SWITCH_STATE) == 0) {
+				break;
+			}
+		}
 	}
 }
 
