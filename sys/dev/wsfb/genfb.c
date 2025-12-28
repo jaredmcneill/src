@@ -644,7 +644,7 @@ genfb_init_screen(void *cookie, struct vcons_screen *scr,
 	struct genfb_private *scp = sc->sc_private;
 	struct rasops_info *ri = &scr->scr_ri;
 	int wantcols;
-	bool is_bgr, is_swapped, is_10bit;
+	bool is_bgr, is_swapped, is_10bit, is_brg;
 
 	ri->ri_depth = sc->sc_depth;
 	ri->ri_width = sc->sc_width;
@@ -676,6 +676,10 @@ genfb_init_screen(void *cookie, struct vcons_screen *scr,
 		prop_dictionary_get_bool(device_properties(sc->sc_dev),
 		    "is_bgr", &is_bgr);
 
+		is_brg = false;
+		prop_dictionary_get_bool(device_properties(sc->sc_dev),
+		    "is_brg", &is_brg);
+
 		is_swapped = false;
 		prop_dictionary_get_bool(device_properties(sc->sc_dev),
 		    "is_swapped", &is_swapped);
@@ -692,6 +696,11 @@ genfb_init_screen(void *cookie, struct vcons_screen *scr,
 			ri->ri_rpos = bits * 0;
 			ri->ri_gpos = bits * 1;
 			ri->ri_bpos = bits * 2;
+		} else if (is_brg) {
+			/* oddball BRG format */
+			ri->ri_bpos = bits * 0;
+			ri->ri_rpos = bits * 1;
+			ri->ri_gpos = bits * 2;
 		} else if (is_swapped) {
 			/* byte-swapped, must be 32 bpp */
 			KASSERT(ri->ri_depth == 32);
