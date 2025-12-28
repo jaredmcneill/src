@@ -48,9 +48,6 @@
 #define EFB_BASE			0x08000000
 #define EFB_SIZE			0x00300000	/* 3 MB */
 
-#define BROADWAY_BASE			0x0c000000
-#define BROADWAY_SIZE			0x00000004
-
 #define CP_BASE				0x0c000000
 #define CP_SIZE				0x0c000080
 
@@ -125,6 +122,9 @@
 #define PI_IRQ_HOLLYWOOD		14
 
 /* Hollywood registers */
+#define HW_IPCPPCMSG			(HOLLYWOOD_PRIV_BASE + 0x000)
+#define HW_IPCPPCCTRL			(HOLLYWOOD_PRIV_BASE + 0x004)
+#define  HW_IPCPPCCTRL_X1		__BIT(0)
 #define HW_VIDIM			(HOLLYWOOD_PRIV_BASE + 0x01c)
 #define  VIDIM_E			__BIT(7)
 #define  VIDIM_Y			__BITS(5,3)
@@ -150,6 +150,7 @@
 #define  DVDVIDEO			__BIT(21)
 #define HW_RESETS			(HOLLYWOOD_PRIV_BASE + 0x194)
 #define  RSTB_IOP			__BIT(23)
+#define  RSTB_DSP			__BIT(22)
 #define  RSTB_IODI			__BIT(17)
 #define  RSTBINB			__BIT(0)
 #define HW_VERSION			(HOLLYWOOD_BASE + 0x214)

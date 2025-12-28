@@ -39,6 +39,9 @@ __KERNEL_RCSID(0, "$NetBSD: bwdsp.c,v 1.2 2024/01/23 21:49:51 jmcneill Exp $");
 #include <dev/audio/audio_if.h>
 #include <dev/audio/audio_dai.h>
 
+#include <machine/wiiu.h>
+#include <machine/pio.h>
+
 #include "mainbus.h"
 #include "bwai.h"
 
@@ -52,6 +55,8 @@ __KERNEL_RCSID(0, "$NetBSD: bwdsp.c,v 1.2 2024/01/23 21:49:51 jmcneill Exp $");
 
 #define	DSP_DMA_ALIGN		32
 #define	DSP_DMA_MAX_BUFSIZE	(DSP_DMA_CONTROL_LENGTH_NUM_CLS * 32)
+
+extern struct powerpc_bus_dma_tag wii_mem2_bus_dma_tag;
 
 struct bwdsp_dma {
 	LIST_ENTRY(bwdsp_dma)	dma_list;
@@ -76,10 +81,13 @@ struct bwdsp_softc {
 	struct audio_format	sc_format;
 
 	audio_dai_tag_t		sc_dai;
+
+	/* Register offsets */
+	uint32_t		sc_dma_start_addr_h;
+	uint32_t		sc_dma_start_addr_l;
+	uint32_t		sc_dma_control_length;
 };
 
-#define	RD2(sc, reg)			\
-	bus_space_read_2((sc)->sc_bst, (sc)->sc_bsh, (reg))
 #define	WR2(sc, reg, val)		\
 	bus_space_write_2((sc)->sc_bst, (sc)->sc_bsh, (reg), (val))
 
@@ -251,12 +259,12 @@ static void
 bwdsp_transfer(struct bwdsp_softc *sc, uint32_t phys_addr, size_t bufsize)
 {
 	if (bufsize != 0) {
-		WR2(sc, DSP_DMA_START_ADDR_H, phys_addr >> 16);
-		WR2(sc, DSP_DMA_START_ADDR_L, phys_addr & 0xffff);
-		WR2(sc, DSP_DMA_CONTROL_LENGTH,
+		WR2(sc, sc->sc_dma_start_addr_h, phys_addr >> 16);
+		WR2(sc, sc->sc_dma_start_addr_l, phys_addr & 0xffff);
+		WR2(sc, sc->sc_dma_control_length,
 		    DSP_DMA_CONTROL_LENGTH_CTRL | (bufsize / 32));
 	} else {
-		WR2(sc, DSP_DMA_CONTROL_LENGTH, 0);
+		WR2(sc, sc->sc_dma_control_length, 0);
 	}
 }
 
@@ -361,6 +369,7 @@ bwdsp_attach(device_t parent, device_t self, void *aux)
 	struct mainbus_attach_args * const maa = aux;
 	bus_addr_t addr = maa->maa_addr;
 	bus_size_t size = 0x200;
+	const uint32_t dma_reg_off = wiiu_native ? 0x10 : 0;
 
 	sc->sc_dev = self;
 	sc->sc_bst = maa->maa_bst;
@@ -368,13 +377,19 @@ bwdsp_attach(device_t parent, device_t self, void *aux)
 		aprint_error(": couldn't map registers\n");
 		return;
 	}
-	sc->sc_dmat = maa->maa_dmat;
+	sc->sc_dmat = &wii_mem2_bus_dma_tag;
 	LIST_INIT(&sc->sc_dmalist);
 	mutex_init(&sc->sc_lock, MUTEX_DEFAULT, IPL_NONE);
 	mutex_init(&sc->sc_intr_lock, MUTEX_DEFAULT, IPL_SCHED);
 
+	sc->sc_dma_start_addr_h = DSP_DMA_START_ADDR_H + dma_reg_off;
+	sc->sc_dma_start_addr_l = DSP_DMA_START_ADDR_L + dma_reg_off;
+	sc->sc_dma_control_length = DSP_DMA_CONTROL_LENGTH + dma_reg_off;
+
 	aprint_naive("\n");
 	aprint_normal(": DSP\n");
+
+	out32(HW_RESETS, in32(HW_RESETS) | RSTB_DSP);
 
 	sc->sc_format.mode = AUMODE_PLAY;
 	sc->sc_format.encoding = AUDIO_ENCODING_SLINEAR_BE;

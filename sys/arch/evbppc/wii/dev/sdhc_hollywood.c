@@ -39,6 +39,7 @@ __KERNEL_RCSID(0, "$NetBSD: sdhc_hollywood.c,v 1.4 2025/02/15 15:49:44 jmcneill 
 #include <dev/sdmmc/sdmmcvar.h>
 
 #include <machine/wii.h>
+#include <machine/wiiu.h>
 #include "hollywood.h"
 
 #define SDHC_SIZE			0x200
@@ -59,7 +60,9 @@ CFATTACH_DECL_NEW(sdhc_hollywood, sizeof(struct sdhc_hollywood_softc),
 static int
 sdhc_hollywood_match(device_t parent, cfdata_t cf, void *aux)
 {
-	return 1;
+	struct hollywood_attach_args *haa = aux;
+
+	return wiiu_native || haa->haa_irq < 32;
 }
 
 static void
@@ -77,6 +80,13 @@ sdhc_hollywood_attach(device_t parent, device_t self, void *aux)
 	sc->sc_base.sc_flags = SDHC_FLAG_SINGLE_POWER_WRITE |
 			       SDHC_FLAG_32BIT_ACCESS |
 			       SDHC_FLAG_USE_DMA;
+	if (wiiu_plat) {
+		sc->sc_base.sc_flags |= SDHC_FLAG_NO_PWR0;
+		if (haa->haa_irq == 8) {
+			/* DMA seems to have trouble with SDIO on Wii U. */
+			sc->sc_base.sc_flags &= ~SDHC_FLAG_USE_DMA;
+		}
+	}
 
 	bst = haa->haa_bst;
 	if (bus_space_map(bst, haa->haa_addr, SDHC_SIZE, 0, &bsh)) {

@@ -116,7 +116,7 @@ config		netbsd	root on ? type ?
 mainbus0 at root
 
 cpu0		at mainbus0
-genfb0		at mainbus0 addr 0x0c002000
+genfb0		at mainbus0
 wsdisplay*      at wsemuldisplaydev?
 options 	WSEMUL_VT100
 options 	WSDISPLAY_CUSTOM_OUTPUT
@@ -149,20 +149,31 @@ avenc0		at iic0 addr 0x70			# A/V Encoder
 
 resetbtn0	at hollywood0 irq 17			# Reset button
 
-ehci0		at hollywood0 addr 0x0d040000 irq 4	# EHCI
+ehci0		at hollywood0 addr 0x0d040000 irq 4	# EHCI0
+ehci1		at hollywood0 addr 0x0d120000 irq 34	# EHCI1 (Wii U)
+ehci2		at hollywood0 addr 0x0d140000 irq 36	# EHCI2 (Wii U)
 ohci0		at hollywood0 addr 0x0d050000 irq 5	# OHCI0
 ohci1		at hollywood0 addr 0x0d060000 irq 6	# OHCI1
+ohci2		at hollywood0 addr 0x0d130000 irq 35	# OHCI2 (Wii U)
+ohci3		at hollywood0 addr 0x0d150000 irq 37	# OHCI3 (Wii U)
 usb*		at usbus?
 
 sdhc0		at hollywood0 addr 0x0d070000 irq 7	# SD card
 sdhc1		at hollywood0 addr 0x0d080000 irq 8	# SDIO/BT
 sdmmc*		at sdmmcbus?
 ld*		at sdmmc?
-bwi*		at sdmmc?				# WLAN
+bwi*		at sdmmc?				# WLAN (Wii)
+bwfm*		at sdmmc?				# WLAN (Wii U)
 
 di0		at hollywood0 addr 0x0d806000 irq 18	# Drive interface
 
 hwaes0		at hollywood0 addr 0x0d020000 irq 2	# AES engine
+
+ahcisata0	at hollywood0 addr 0x0d160400 irq 38	# AHCI SATA (Wii U)
+atabus*		at ata?
+atapibus*	at atapi?
+wd*		at atabus? drive ?
+cd*		at atapibus? drive ?
 
 include "dev/usb/usbdevices.config"
 include "dev/bluetooth/bluetoothdevices.config"

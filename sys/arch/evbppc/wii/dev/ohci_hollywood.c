@@ -42,6 +42,7 @@ __KERNEL_RCSID(0, "$NetBSD: ohci_hollywood.c,v 1.3 2024/09/22 13:56:25 jmcneill 
 #include <dev/usb/ohcivar.h>
 
 #include <machine/wii.h>
+#include <machine/wiiu.h>
 #include <machine/pio.h>
 #include "hollywood.h"
 
@@ -59,7 +60,9 @@ CFATTACH_DECL_NEW(ohci_hollywood, sizeof(struct ohci_softc),
 static int
 ohci_hollywood_match(device_t parent, cfdata_t cf, void *aux)
 {
-	return 1;
+	struct hollywood_attach_args *haa = aux;
+
+	return wiiu_native || haa->haa_irq < 32;
 }
 
 static void
@@ -92,14 +95,14 @@ ohci_hollywood_attach(device_t parent, device_t self, void *aux)
 
 	out32(USB_CHICKENBITS, in32(USB_CHICKENBITS) | OHCI_INTR_ENABLE);
 
-	hollywood_intr_establish(haa->haa_irq, IPL_USB, ohci_intr, sc,
-	    device_xname(self));
-
 	error = ohci_init(sc);
 	if (error != 0) {
 		aprint_error_dev(self, "init failed, error = %d\n", error);
 		return;
 	}
+
+	hollywood_intr_establish(haa->haa_irq, IPL_USB, ohci_intr, sc,
+	    device_xname(self));
 
 	sc->sc_child = config_found(self, &sc->sc_bus, usbctlprint,
 	    CFARGS_NONE);

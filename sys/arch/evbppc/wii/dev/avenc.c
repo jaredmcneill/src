@@ -37,6 +37,7 @@ __KERNEL_RCSID(0, "$NetBSD: avenc.c,v 1.2 2024/10/13 16:21:37 jmcneill Exp $");
 #include <sys/bus.h>
 #include <sys/kmem.h>
 #include <machine/wii.h>
+#include <machine/wiiu.h>
 
 #include <lib/libkern/libkern.h>	/* hexdump */
 
@@ -230,7 +231,7 @@ avenc_match(device_t parent, cfdata_t match, void *aux)
 {
 	struct i2c_attach_args *ia = aux;
 
-	return ia->ia_addr == AVENC_ADDR;
+	return !wiiu_plat && ia->ia_addr == AVENC_ADDR;
 }
 
 static void

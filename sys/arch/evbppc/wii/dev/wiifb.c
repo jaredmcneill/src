@@ -35,6 +35,7 @@ __KERNEL_RCSID(0, "$NetBSD: wiifb.c,v 1.8 2025/10/25 15:02:56 jmcneill Exp $");
 #include <sys/systm.h>
 
 #include <machine/wii.h>
+#include <machine/wiiu.h>
 #include <powerpc/spr.h>
 #include <powerpc/oea/spr.h>
 #include <powerpc/oea/hid.h>
@@ -198,7 +199,7 @@ wiifb_match(device_t parent, cfdata_t cf, void *aux)
 {
 	struct mainbus_attach_args *maa = aux;
 
-	return strcmp(maa->maa_name, "genfb") == 0;
+	return !wiiu_native && strcmp(maa->maa_name, "genfb") == 0;
 }
 
 static void
@@ -211,8 +212,7 @@ wiifb_attach(device_t parent, device_t self, void *aux)
 
 	sc->sc_gen.sc_dev = self;
 	sc->sc_bst = maa->maa_bst;
-	error = bus_space_map(sc->sc_bst, maa->maa_addr, VI_SIZE, 0,
-	    &sc->sc_bsh);
+	error = bus_space_map(sc->sc_bst, VI_BASE, VI_SIZE, 0, &sc->sc_bsh);
 	if (error != 0) {
 		panic("couldn't map registers");
 	}

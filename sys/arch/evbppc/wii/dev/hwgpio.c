@@ -40,6 +40,7 @@ __KERNEL_RCSID(0, "$NetBSD: hwgpio.c,v 1.1 2024/01/23 21:48:12 jmcneill Exp $");
 #include <dev/gpio/gpiovar.h>
 
 #include <machine/wii.h>
+#include <machine/wiiu.h>
 
 #include "hollywood.h"
 
@@ -126,7 +127,7 @@ hwgpio_pin_ctl(void *priv, int pin, int flags)
 static int
 hwgpio_match(device_t parent, cfdata_t cf, void *aux)
 {
-	return 1;
+	return !wiiu_plat;
 }
 
 static void

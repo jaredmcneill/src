@@ -139,7 +139,7 @@
 	/*
 	 * Use BAT1 to access MEM2.
 	 */
-	/* BATU(0x10000000, BAT_BL_64M, BAT_Vs) */
+	/* BATU(0x10000000, BAT_BL_2G, BAT_Vs) */
 	lis	%r11, 0x1000
 	ori	%r11, %r11, BAT_BL_2G|BAT_Vs
 	/* BATL(0x10000000, BAT_M, BAT_PP_RW) */

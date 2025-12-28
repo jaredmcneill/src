@@ -39,6 +39,9 @@ file	arch/evbppc/wii/mainbus.c		mainbus | cpu	needs-flag
 attach	genfb at mainbus with wiifb
 file	arch/evbppc/wii/dev/wiifb.c		wiifb
 
+attach	genfb at mainbus with wiiufb
+file	arch/evbppc/wii/dev/wiiufb.c		wiiufb
+
 device	bwai
 attach	bwai at mainbus
 file	arch/evbppc/wii/dev/bwai.c		bwai
@@ -101,3 +104,6 @@ file	arch/evbppc/wii/dev/di.c		di
 device	hwaes
 attach	hwaes at hollywood
 file	arch/evbppc/wii/dev/hwaes.c		hwaes
+
+attach	ahcisata at hollywood with ahcisata_ahb
+file	arch/evbppc/wii/dev/ahcisata_ahb.c 	ahcisata_ahb

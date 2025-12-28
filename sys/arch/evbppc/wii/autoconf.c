@@ -58,12 +58,14 @@ __KERNEL_RCSID(0, "$NetBSD: autoconf.c,v 1.3 2024/10/13 16:21:37 jmcneill Exp $"
 #include <powerpc/pte.h>
 
 #include <machine/wii.h>
+#include <machine/wiiu.h>
 
 void findroot(void);
 void disable_intr(void);
 void enable_intr(void);
 
 static void parse_cmdline(void);
+const char *get_cmdline(const char *);
 
 /*
  * Determine i/o configuration for a machine.
@@ -78,7 +80,9 @@ cpu_configure(void)
 
 	genppc_cpu_configure();
 
-	wii_slot_led(false);
+	if (!wiiu_plat) {
+		wii_slot_led(false);
+	}
 }
 
 void

@@ -47,6 +47,7 @@ __KERNEL_RCSID(0, "$NetBSD: di.c,v 1.1 2025/02/12 11:33:34 jmcneill Exp $");
 #include <dev/scsipi/scsiconf.h>
 
 #include <machine/wii.h>
+#include <machine/wiiu.h>
 #include <machine/pio.h>
 #include "hollywood.h"
 
@@ -147,7 +148,7 @@ CFATTACH_DECL_NEW(di, sizeof(struct di_softc),
 static int
 di_match(device_t parent, cfdata_t cf, void *aux)
 {
-	return 1;
+	return !wiiu_native;
 }
 
 static void

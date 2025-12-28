@@ -1,7 +1,7 @@
 /* $NetBSD: pic_pi.c,v 1.4 2025/03/13 18:41:34 jmcneill Exp $ */
 
 /*-
- * Copyright (c) 2024 Jared McNeill <jmcneill@invisible.ca>
+ * Copyright (c) 2024-2025 Jared McNeill <jmcneill@invisible.ca>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -44,9 +44,12 @@ __KERNEL_RCSID(0, "$NetBSD: pic_pi.c,v 1.4 2025/03/13 18:41:34 jmcneill Exp $");
 #include <machine/intr.h>
 #include <arch/powerpc/pic/picvar.h>
 #include <machine/wii.h>
+#include <machine/wiiu.h>
 
 static uint32_t pic_irqmask;
 static uint32_t pic_actmask;
+static uint32_t pic_intsr;
+static uint32_t pic_intmr;
 
 void pi_init_intr(void);
 
@@ -57,14 +60,14 @@ static void
 pi_enable_irq(struct pic_ops *pic, int irq, int type)
 {
 	pic_irqmask |= __BIT(irq);
-	WR4(PI_INTMR, pic_irqmask & ~pic_actmask);
+	WR4(pic_intmr, pic_irqmask & ~pic_actmask);
 }
 
 static void
 pi_disable_irq(struct pic_ops *pic, int irq)
 {
 	pic_irqmask &= ~__BIT(irq);
-	WR4(PI_INTMR, pic_irqmask & ~pic_actmask);
+	WR4(pic_intmr, pic_irqmask & ~pic_actmask);
 }
 
 static int
@@ -73,7 +76,7 @@ pi_get_irq(struct pic_ops *pic, int mode)
 	uint32_t raw, pend;
 	int irq;
 
-	raw = RD4(PI_INTSR);
+	raw = RD4(pic_intsr);
 	pend = raw & pic_irqmask;
 	if (pend == 0) {
 		return 255;
@@ -81,7 +84,7 @@ pi_get_irq(struct pic_ops *pic, int mode)
 	irq = ffs32(pend) - 1;
 
 	pic_actmask |= __BIT(irq);
-	WR4(PI_INTMR, pic_irqmask & ~pic_actmask);
+	WR4(pic_intmr, pic_irqmask & ~pic_actmask);
 
 	return irq;
 }
@@ -90,8 +93,8 @@ static void
 pi_ack_irq(struct pic_ops *pic, int irq)
 {
 	pic_actmask &= ~__BIT(irq);
-	WR4(PI_INTMR, pic_irqmask & ~pic_actmask);
-	WR4(PI_INTSR, __BIT(irq));
+	WR4(pic_intmr, pic_irqmask & ~pic_actmask);
+	WR4(pic_intsr, __BIT(irq));
 }
 
 static struct pic_ops pic = {
@@ -111,10 +114,17 @@ pi_init_intr(void)
 {
 	pic_irqmask = 0;
 	pic_actmask = 0;
+	if (wiiu_native) {
+		pic_intmr = WIIU_PI_INTMSK0;
+		pic_intsr = WIIU_PI_INTSR0;
+	} else {
+		pic_intmr = PI_INTMR;
+		pic_intsr = PI_INTSR;
+	}
 
 	/* Mask and clear all interrupts. */
-	WR4(PI_INTMR, 0);
-	WR4(PI_INTSR, ~0U);
+	WR4(pic_intmr, 0);
+	WR4(pic_intsr, ~0U);
 
 	pic_add(&pic);
 }

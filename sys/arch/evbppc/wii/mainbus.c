@@ -115,14 +115,16 @@ mainbus_attach(device_t parent, device_t self, void *aux)
 	config_found(self, &maa, mainbus_print, CFARGS_NONE);
 
 	maa.maa_name = "bwdsp";
-	maa.maa_addr = DSP_BASE;
-	maa.maa_irq = PI_IRQ_DSP;
+	maa.maa_addr = wiiu_native ? WIIU_DSP_BASE : DSP_BASE;
+	maa.maa_irq = MAINBUSCF_IRQ_DEFAULT;
 	config_found(self, &maa, mainbus_print, CFARGS_NONE);
 
-	maa.maa_name = "si";
-	maa.maa_addr = SI_BASE;
-	maa.maa_irq = PI_IRQ_SI;
-	config_found(self, &maa, mainbus_print, CFARGS_NONE);
+	if (!wiiu_native) {
+		maa.maa_name = "si";
+		maa.maa_addr = SI_BASE;
+		maa.maa_irq = PI_IRQ_SI;
+		config_found(self, &maa, mainbus_print, CFARGS_NONE);
+	}
 }
 
 static int	cpu_match(device_t, cfdata_t, void *);

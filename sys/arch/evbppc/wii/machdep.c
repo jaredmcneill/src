@@ -92,6 +92,7 @@ __KERNEL_RCSID(0, "$NetBSD: machdep.c,v 1.12 2025/11/15 17:59:23 jmcneill Exp $"
 #include <sys/sysctl.h>
 #include <sys/syslog.h>
 #include <sys/systm.h>
+#include <sys/cpu.h>
 
 #include <uvm/uvm_extern.h>
 
@@ -123,6 +124,7 @@ __KERNEL_RCSID(0, "$NetBSD: machdep.c,v 1.12 2025/11/15 17:59:23 jmcneill Exp $"
 
 #include "ksyms.h"
 #include "ukbd.h"
+#include "genfb.h"
 #include "gecko.h"
 
 #ifndef WII_DEFAULT_CMDLINE
@@ -168,16 +170,17 @@ wii_mem2_dmamem_alloc(bus_dma_tag_t t, bus_size_t size, bus_size_t alignment,
     int flags)
 {
 	struct mem_region *mem, *avail;
+	const int mem2_index = wiiu_native ? 2 : 1;
 
 	/* Restrict memory used for DMA to ranges in MEM2 */
 	mem_regions(&mem, &avail);
-	if (mem[1].size == 0) {
+	if (mem[mem2_index].size == 0) {
 		return ENOMEM;
 	}
 
 	return _bus_dmamem_alloc_range(t, size, alignment, boundary, segs,      
-	    nsegs, rsegs, flags, mem[1].start,
-	    mem[1].start + mem[1].size - PAGE_SIZE - 1);
+	    nsegs, rsegs, flags, mem[mem2_index].start,
+	    mem[mem2_index].start + mem[mem2_index].size - PAGE_SIZE - 1);
 }
 
 struct powerpc_bus_dma_tag wii_bus_dma_tag = {
@@ -231,7 +234,8 @@ void initppc(u_int, u_int, u_int, void *); /* Called from locore */
 void wii_dolphin_elf_loader_id(void);
 
 static void wii_setup(void);
-static void wiiu_setup(void);
+static void wii_poweroff(void);
+static void wii_reset(void);
 static void init_decrementer(void);
 
 static void
@@ -328,8 +332,8 @@ wiiu_init_memmap(u_int endkernel)
 	physmemr[3].size   = 0;
 
 	/* MEM1 available memory */
-	availmemr[0].start = physmemr[0].start;
-	availmemr[0].size  = physmemr[0].size;
+	availmemr[0].start = (endkernel + PGOFSET) & ~PGOFSET;
+	availmemr[0].size  = physmemr[0].size - availmemr[0].start;
 
 	/*
 	 * MEM2 available memory. Reserved regions:
@@ -413,11 +417,7 @@ initppc(u_int startkernel, u_int endkernel, u_int args, void *btinfo)
 	ticks_per_msec = ticks_per_sec / 1000;
 	cpu_timebase = ticks_per_sec;
 
-	if (wiiu_native) {
-		wiiu_setup();
-	} else {
-		wii_setup();
-	}
+	wii_setup();
 
 	uvm_md_init();
 
@@ -471,8 +471,16 @@ cpu_startup(void)
 void
 consinit(void)
 {
+#if NGENFB > 0
+	if (wiiu_native) {
+		extern void wiiufb_consinit(void);
+		wiiufb_consinit();
+	}
+#endif
 #if NGECKO > 0
-	usbgecko_consinit();
+	if (!wiiu_native) {
+		usbgecko_consinit();
+	}
 #endif
 #if NUKBD > 0
 	ukbd_cnattach();
@@ -508,7 +516,7 @@ cpu_reboot(int howto, char *what)
 	}
 	if ((howto & RB_POWERDOWN) == RB_POWERDOWN) {
 		printf("power off\n\n");
-		out32(HW_GPIOB_OUT, in32(HW_GPIOB_OUT) | __BIT(GPIO_SHUTDOWN));
+		wii_poweroff();
 		delay(100000);
 		printf("power off failed!\n\n");
 	}
@@ -523,32 +531,63 @@ cpu_reboot(int howto, char *what)
 	}
 
 	printf("rebooting...\n\n");
-	out32(HW_RESETS, in32(HW_RESETS) & ~RSTBINB);
+	wii_reset();
 	while (1);
 }
 
 static void
 wii_setup(void)
 {
-	/* Turn on the drive slot LED. */
-	wii_slot_led(true);
+	if (!wiiu_plat) {
+		/* Turn on the drive slot LED. */
+		wii_slot_led(true);
 
-	/* Enable PPC access to SHUTDOWN GPIO. */
-	out32(HW_GPIO_OWNER, in32(HW_GPIO_OWNER) | __BIT(GPIO_SHUTDOWN));
+		/* Enable PPC access to SHUTDOWN GPIO. */
+		out32(HW_GPIO_OWNER, in32(HW_GPIO_OWNER) | __BIT(GPIO_SHUTDOWN));
 
-	/* Enable PPC access to DI_SPIN GPIO. */
-	out32(HW_GPIO_OWNER, in32(HW_GPIO_OWNER) | __BIT(GPIO_DI_SPIN));
+		/* Enable PPC access to DI_SPIN GPIO. */
+		out32(HW_GPIO_OWNER, in32(HW_GPIO_OWNER) | __BIT(GPIO_DI_SPIN));
 
-	/* Enable PPC access to EXI bus. */
-	out32(HW_AIPPROT, in32(HW_AIPPROT) | ENAHBIOPI);
+		/* Enable PPC access to EXI bus. */
+		out32(HW_AIPPROT, in32(HW_AIPPROT) | ENAHBIOPI);
 
-	/* Enable DVD video support. */
-	out32(HW_COMPAT, in32(HW_COMPAT) & ~DVDVIDEO);
+		/* Enable DVD video support. */
+		out32(HW_COMPAT, in32(HW_COMPAT) & ~DVDVIDEO);
+	}
 }
 
 static void
-wiiu_setup(void)
+wiiu_wood_ipc(uint32_t msg)
 {
+	KASSERT(wiiu_native);
+
+	out32(HW_IPCPPCMSG, msg);
+	out32(HW_IPCPPCCTRL, HW_IPCPPCCTRL_X1);
+	for (;;) {
+		if ((in32(HW_IPCPPCCTRL) & HW_IPCPPCCTRL_X1) == 0) {
+			break;
+		}
+	}
+}
+
+static void
+wii_poweroff(void)
+{
+	if (wiiu_native) {
+		wiiu_wood_ipc(0xcafe0001);
+	} else {
+		out32(HW_GPIOB_OUT, in32(HW_GPIOB_OUT) | __BIT(GPIO_SHUTDOWN));
+	}
+}
+
+static void
+wii_reset(void)
+{
+	if (wiiu_native) {
+		wiiu_wood_ipc(0xcafe0002);
+	} else {
+		out32(HW_RESETS, in32(HW_RESETS) & ~RSTBINB);
+	}
 }
 
 static void

@@ -42,6 +42,7 @@ __KERNEL_RCSID(0, "$NetBSD: ehci_hollywood.c,v 1.4 2024/10/13 16:21:37 jmcneill 
 #include <dev/usb/ehcivar.h>
 
 #include <machine/wii.h>
+#include <machine/wiiu.h>
 #include "hollywood.h"
 
 #define USB_CHICKENBITS		0x0d0400cc
@@ -58,7 +59,9 @@ CFATTACH_DECL_NEW(ehci_hollywood, sizeof(struct ehci_softc),
 static int
 ehci_hollywood_match(device_t parent, cfdata_t cf, void *aux)
 {
-	return 1;
+	struct hollywood_attach_args *haa = aux;
+
+	return wiiu_native || haa->haa_irq < 32;
 }
 
 static void
@@ -73,7 +76,7 @@ ehci_hollywood_attach(device_t parent, device_t self, void *aux)
 	sc->sc_bus.ub_dmatag = &wii_mem2_bus_dma_tag;
 	sc->sc_bus.ub_revision = USBREV_2_0;
 	sc->sc_flags = EHCIF_32BIT_ACCESS;
-	sc->sc_ncomp = 2;
+	sc->sc_ncomp = haa->haa_irq < 32 ? 2 : 1;
 	sc->sc_size = 0x100;
 	sc->iot = haa->haa_bst;
 	if (bus_space_map(sc->iot, haa->haa_addr, sc->sc_size, 0, &sc->ioh)) {
@@ -91,14 +94,14 @@ ehci_hollywood_attach(device_t parent, device_t self, void *aux)
 
 	out32(USB_CHICKENBITS, in32(USB_CHICKENBITS) | EHCI_INTR_ENABLE);
 
-	hollywood_intr_establish(haa->haa_irq, IPL_USB, ehci_intr, sc,
-	    device_xname(self));
-
 	error = ehci_init(sc);
 	if (error != 0) {
 		aprint_error_dev(self, "init failed, error = %d\n", error);
 		return;
 	}
+
+	hollywood_intr_establish(haa->haa_irq, IPL_USB, ehci_intr, sc,
+	    device_xname(self));
 
 	sc->sc_child = config_found(self, &sc->sc_bus, usbctlprint,
 	    CFARGS_NONE);
