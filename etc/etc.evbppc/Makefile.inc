@@ -26,51 +26,6 @@ KERNEL_SETS+=		TWRP1025
 BUILD_KERNELS+=		INSTALL_P2020DS INSTALL_P2020RDB
 BUILD_KERNELS+=		INSTALL_RB850GX2
 BUILD_KERNELS+=		INSTALL_TWRP1025
-# wii
-KERNEL_SETS+=		WII
-BUILD_KERNELS+=		INSTALL_WII
 #
 KERNEL_SUFFIXES=	img bin ub
 .endif
-
-# Support for mkimage
-MKIMAGE= 	${NETBSDSRCDIR}/distrib/utils/embedded/mkimage
-IMAGE.rel=      ${RELEASEDIR}/${RELEASEMACHINEDIR}
-IMAGE.dir=      ${IMAGE.rel}/binary/gzimg
-IMAGE.kern=     ${IMAGE.rel}/binary/kernel
-IMAGEENDIAN=	be
-
-__mkimage: .USE
-	TOOL_MAKE=${MAKE} \
-	TOOL_MAKEFS=${TOOL_MAKEFS} \
-	TOOL_DISKLABEL=${TOOL_DISKLABEL} \
-	TOOL_FDISK=${TOOL_FDISK} \
-	TOOL_GPT=${TOOL_GPT} \
-	TOOL_GZIP=${TOOL_GZIP} \
-	TOOL_MKNOD=${TOOL_MKNOD} \
-	TOOL_PAX=${TOOL_PAX} \
-	TOOL_MKUBOOTIMAGE=${TOOL_MKUBOOTIMAGE} \
-	TOOL_MTREE=${TOOL_MTREE} \
-	TOOL_SED=${TOOL_SED} \
-	TOOL_PWD_MKDB=${TOOL_PWD_MKDB} \
-	HOST_SH=${HOST_SH} \
-	KERNOBJDIR=${KERNOBJDIR} \
-	MACHINE=${MACHINE} \
-	MKDTB=${MKDTB} \
-	MKPOSTFIX=${MKPOSTFIX} \
-	CKSUM=${CKSUM} \
-	IMAGEDIR=${IMAGE.dir} \
-	${HOST_SH} -x ${MKIMAGE} -h ${.TARGET:S/smp_//} -D ${DESTDIR} \
-            -S ${NETBSDSRCDIR} -B ${IMAGEENDIAN} ${MKI_OPTS.${.TARGET}} \
-            ${IMAGE.dir}/${.TARGET:S/smp_//}.img.gz
-
-.if ${MACHINE_ARCH} == "powerpc"
-smp_wii: __mkimage
-	cd ${KERNSRCDIR}/arch/evbppc/stand/wii && ${MAKE} release
-MKI_OPTS.smp_wii=	-K ${IMAGE.kern} -x
-SNAP_MD_POST_DEPS+=	smp_wii
-INSTALLATION_DIRS+=	binary/gzimg
-INSTALLATION_DIRS+=	installation/misc
-.endif
-
-snap_md_post: check_DESTDIR check_RELEASEDIR snap_post .WAIT ${SNAP_MD_POST_DEPS}

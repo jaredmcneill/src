@@ -56,16 +56,6 @@ md_init_set_status(int flags)
 	struct utsname instsys;
 
 	(void)flags;
-
-	/*
-	 * Get the name of the install kernel we are running under and
-	 * enable the installation of the corresponding kernel.
-	 */
-	uname(&instsys);
-	if (strstr(instsys.version, "(INSTALL_WII")) {
-		set_kernel_set(EVBPPC_SET_KERNEL_WII);
-		set_noextract_set(EVBPPC_SET_KERNEL_WII);
-	}
 }
 
 bool

@@ -53,8 +53,6 @@
  *      base etc comp games man misc rescue tests text xbase xcomp xetc xfont xserver
  */
 #define SET_KERNEL_1_NAME	"kern-GENERIC"
-#define SET_KERNEL_2_NAME	"kern-WII"
-#define EVBPPC_SET_KERNEL_WII	SET_KERNEL_2
 
 /*
  * Machine-specific command to write a new label to a disk.
