@@ -4320,6 +4320,7 @@ rs6000_emit_epilogue (enum epilogue_type epilogue_type)
   bool using_mtcr_multiple = (rs6000_tune == PROCESSOR_PPC601
 			      || rs6000_tune == PROCESSOR_PPC603
 			      || rs6000_tune == PROCESSOR_PPC750
+			      || rs6000_tune == PROCESSOR_ESPRESSO
 			      || optimize_size);
 
   /* Restore via the backchain when we have a large frame, since this

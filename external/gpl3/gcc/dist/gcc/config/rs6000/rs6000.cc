@@ -4652,6 +4652,7 @@ rs6000_option_override_internal (bool global_init_p)
 
       case PROCESSOR_PPC750:
       case PROCESSOR_PPC7400:
+      case PROCESSOR_ESPRESSO:
 	rs6000_cost = &ppc750_cost;
 	break;
 
@@ -16826,6 +16827,10 @@ emit_store_conditional (machine_mode mode, rtx res, rtx mem, rtx val)
   if (PPC405_ERRATUM77)
     emit_insn (gen_hwsync ());
 
+  /* Emit dcbst before stwcx. to address Espresso erratum */
+  if (ESPRESSO_ERRATUM)
+    emit_insn (gen_rs6000_dcbst (mem));
+
   emit_insn (fn (res, mem, val));
 }
 
@@ -18246,6 +18251,7 @@ rs6000_adjust_cost (rtx_insn *insn, int dep_type, rtx_insn *dep_insn, int cost,
                  || rs6000_tune == PROCESSOR_PPC620
                  || rs6000_tune == PROCESSOR_PPC630
                  || rs6000_tune == PROCESSOR_PPC750
+                 || rs6000_tune == PROCESSOR_ESPRESSO
                  || rs6000_tune == PROCESSOR_PPC7400
                  || rs6000_tune == PROCESSOR_PPC7450
                  || rs6000_tune == PROCESSOR_PPCE5500
@@ -18803,6 +18809,7 @@ rs6000_issue_rate (void)
   case PROCESSOR_PPC440:
   case PROCESSOR_PPC603:
   case PROCESSOR_PPC750:
+  case PROCESSOR_ESPRESSO:
   case PROCESSOR_PPC7400:
   case PROCESSOR_PPC8540:
   case PROCESSOR_PPC8548:

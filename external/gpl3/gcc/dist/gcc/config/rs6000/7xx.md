@@ -47,79 +47,79 @@
 
 (define_insn_reservation "ppc750-load" 2
   (and (eq_attr "type" "load,fpload,vecload,load_l")
-       (eq_attr "cpu" "ppc750,ppc7400"))
+       (eq_attr "cpu" "ppc750,ppc7400,espresso"))
   "ppc750_du,lsu_7xx")
 
 (define_insn_reservation "ppc750-store" 2
   (and (eq_attr "type" "store,fpstore,vecstore")
-       (eq_attr "cpu" "ppc750,ppc7400"))
+       (eq_attr "cpu" "ppc750,ppc7400,espresso"))
   "ppc750_du,lsu_7xx")
 
 (define_insn_reservation "ppc750-storec" 8
   (and (eq_attr "type" "store_c")
-       (eq_attr "cpu" "ppc750,ppc7400"))
+       (eq_attr "cpu" "ppc750,ppc7400,espresso"))
   "ppc750_du,lsu_7xx")
 
 (define_insn_reservation "ppc750-integer" 1
   (and (ior (eq_attr "type" "integer,insert,trap,cntlz,isel")
 	    (and (eq_attr "type" "add,logical,shift,exts")
 		 (eq_attr "dot" "no")))
-       (eq_attr "cpu" "ppc750,ppc7400"))
+       (eq_attr "cpu" "ppc750,ppc7400,espresso"))
   "ppc750_du,iu1_7xx|iu2_7xx")
 
 (define_insn_reservation "ppc750-two" 1
   (and (eq_attr "type" "two")
-       (eq_attr "cpu" "ppc750,ppc7400"))
+       (eq_attr "cpu" "ppc750,ppc7400,espresso"))
   "ppc750_du,iu1_7xx|iu2_7xx,iu1_7xx|iu2_7xx")
 
 (define_insn_reservation "ppc750-three" 1
   (and (eq_attr "type" "three")
-       (eq_attr "cpu" "ppc750,ppc7400"))
+       (eq_attr "cpu" "ppc750,ppc7400,espresso"))
   "ppc750_du,iu1_7xx|iu2_7xx,iu1_7xx|iu2_7xx,iu1_7xx|iu2_7xx")
 
 (define_insn_reservation "ppc750-imul" 4
   (and (eq_attr "type" "mul")
        (eq_attr "size" "32")
-       (eq_attr "cpu" "ppc750,ppc7400"))
+       (eq_attr "cpu" "ppc750,ppc7400,espresso"))
   "ppc750_du,iu1_7xx*4")
 
 (define_insn_reservation "ppc750-imul2" 3
   (and (eq_attr "type" "mul")
        (eq_attr "size" "16")
-       (eq_attr "cpu" "ppc750,ppc7400"))
+       (eq_attr "cpu" "ppc750,ppc7400,espresso"))
   "ppc750_du,iu1_7xx*2")
 
 (define_insn_reservation "ppc750-imul3" 2
   (and (eq_attr "type" "mul")
        (eq_attr "size" "8")
-       (eq_attr "cpu" "ppc750,ppc7400"))
+       (eq_attr "cpu" "ppc750,ppc7400,espresso"))
   "ppc750_du,iu1_7xx")
 
 (define_insn_reservation "ppc750-idiv" 19
   (and (eq_attr "type" "div")
-       (eq_attr "cpu" "ppc750,ppc7400"))
+       (eq_attr "cpu" "ppc750,ppc7400,espresso"))
   "ppc750_du,iu1_7xx*19")
 
 (define_insn_reservation "ppc750-compare" 2
   (and (ior (eq_attr "type" "cmp")
 	    (and (eq_attr "type" "add,logical,shift,exts")
 		 (eq_attr "dot" "yes")))
-       (eq_attr "cpu" "ppc750,ppc7400"))
+       (eq_attr "cpu" "ppc750,ppc7400,espresso"))
   "ppc750_du,(iu1_7xx|iu2_7xx)")
 
 (define_insn_reservation "ppc750-fpcompare" 2
   (and (eq_attr "type" "fpcompare")
-       (eq_attr "cpu" "ppc750,ppc7400"))
+       (eq_attr "cpu" "ppc750,ppc7400,espresso"))
   "ppc750_du,fpu_7xx")
 
 (define_insn_reservation "ppc750-fp" 3
   (and (eq_attr "type" "fp,fpsimple")
-       (eq_attr "cpu" "ppc750,ppc7400"))
+       (eq_attr "cpu" "ppc750,ppc7400,espresso"))
   "ppc750_du,fpu_7xx")
 
 (define_insn_reservation "ppc750-dmul" 4
   (and (eq_attr "type" "dmul")
-       (eq_attr "cpu" "ppc750"))
+       (eq_attr "cpu" "ppc750,espresso"))
   "ppc750_du,fpu_7xx*2")
 
 (define_insn_reservation "ppc7400-dmul" 3
@@ -130,37 +130,37 @@
 ; Divides are not pipelined
 (define_insn_reservation "ppc750-sdiv" 17
   (and (eq_attr "type" "sdiv")
-       (eq_attr "cpu" "ppc750,ppc7400"))
+       (eq_attr "cpu" "ppc750,ppc7400,espresso"))
   "ppc750_du,fpu_7xx*17")
 
 (define_insn_reservation "ppc750-ddiv" 31
   (and (eq_attr "type" "ddiv")
-       (eq_attr "cpu" "ppc750,ppc7400"))
+       (eq_attr "cpu" "ppc750,ppc7400,espresso"))
   "ppc750_du,fpu_7xx*31")
 
 (define_insn_reservation "ppc750-mfcr" 2
   (and (eq_attr "type" "mfcr,mtcr")
-       (eq_attr "cpu" "ppc750,ppc7400"))
+       (eq_attr "cpu" "ppc750,ppc7400,espresso"))
   "ppc750_du,iu1_7xx")
 
 (define_insn_reservation "ppc750-crlogical" 3
   (and (eq_attr "type" "cr_logical")
-       (eq_attr "cpu" "ppc750,ppc7400"))
+       (eq_attr "cpu" "ppc750,ppc7400,espresso"))
   "nothing,sru_7xx*2")
 
 (define_insn_reservation "ppc750-mtjmpr" 2
   (and (eq_attr "type" "mtjmpr,isync,sync")
-       (eq_attr "cpu" "ppc750,ppc7400"))
+       (eq_attr "cpu" "ppc750,ppc7400,espresso"))
   "nothing,sru_7xx*2")
 
 (define_insn_reservation "ppc750-mfjmpr" 3
   (and (eq_attr "type" "mfjmpr")
-       (eq_attr "cpu" "ppc750,ppc7400"))
+       (eq_attr "cpu" "ppc750,ppc7400,espresso"))
   "nothing,sru_7xx*2")
 
 (define_insn_reservation "ppc750-jmpreg" 1
   (and (eq_attr "type" "jmpreg,branch,isync")
-       (eq_attr "cpu" "ppc750,ppc7400"))
+       (eq_attr "cpu" "ppc750,ppc7400,espresso"))
   "nothing,bpu_7xx")
 
 ;; Altivec
