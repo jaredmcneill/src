@@ -37,7 +37,7 @@ __RCSID("$NetBSD: atomic_swap.S,v 1.9 2022/04/06 22:47:56 riastradh Exp $")
 ENTRY(_atomic_swap_32)
 	mr	%r10,%r3
 1:	lwarx	%r3,0,%r10
-	IBM405_ERRATA77_DCBT(0,%r10)
+	POWERPC_STWCX_PRE(0,%r10)
 	stwcx.	%r4,0,%r10
 	beqlr+
 	b	1b

@@ -444,7 +444,13 @@ y:	.quad	.##y,.TOC.@tocbase,0;	\
 .endm
 #endif /* _LOCORE */
 
-#if defined(IBM405_ERRATA77) || \
+#if defined(__ESPRESSO__)
+/*
+ * Workaround for IBM Espresso erratum.
+ */
+#define POWERPC_STWCX_PRE(ra, rb)	dcbst ra,rb
+#define IBM405_ERRATA77_SYNC		/* nothing */
+#elif defined(IBM405_ERRATA77) || \
     ((defined(_MODULE) || !defined(_KERNEL)) && !defined(_LP64))
 /*
  * Workaround for IBM405 Errata 77 (CPU_210): interrupted stwcx. may
@@ -453,10 +459,10 @@ y:	.quad	.##y,.TOC.@tocbase,0;	\
  * (1) Insert dcbt before every stwcx. instruction
  * (2) Insert sync before every rfi/rfci instruction
  */
-#define	IBM405_ERRATA77_DCBT(ra, rb)	dcbt ra,rb
+#define	POWERPC_STWCX_PRE(ra, rb)	dcbt ra,rb
 #define	IBM405_ERRATA77_SYNC		sync
 #else
-#define	IBM405_ERRATA77_DCBT(ra, rb)	/* nothing */
+#define	POWERPC_STWCX_PRE(ra, rb)	/* nothing */
 #define	IBM405_ERRATA77_SYNC		/* nothing */
 #endif
 

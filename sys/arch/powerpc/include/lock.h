@@ -83,6 +83,8 @@ __cpu_simple_lock(__cpu_simple_lock_t *alp)
 3:				\n"
 #ifdef IBM405_ERRATA77
 	"dcbt	0,%1		\n"
+#elif defined(__ESPRESSO__)
+	"dcbst	0,%1		\n"
 #endif
 	"stwcx.	%3,0,%1		\n\
 	bne-	1b		\n\
@@ -105,12 +107,16 @@ __cpu_simple_lock_try(__cpu_simple_lock_t *alp)
 	bne	2f		\n"
 #ifdef IBM405_ERRATA77
 	"dcbt	0,%1		\n"
+#elif defined(__ESPRESSO__)
+	"dcbst	0,%1		\n"
 #endif
 	"stwcx.	%3,0,%1		\n\
 	bne-	1b		\n\
 2:				\n"
 #ifdef IBM405_ERRATA77
 	"dcbt	0,%4		\n"
+#elif defined(__ESPRESSO__)
+	"dcbst	0,%1		\n"
 #endif
 	"stwcx.	%3,0,%4		\n\
 	isync			\n\

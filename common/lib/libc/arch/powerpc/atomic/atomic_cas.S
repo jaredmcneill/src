@@ -39,7 +39,7 @@ ENTRY(_atomic_cas_32)
 1:	lwarx	%r3,0,%r10
 	cmpw	%r3,%r4
 	bnelr-
-	IBM405_ERRATA77_DCBT(0,%r10)
+	POWERPC_STWCX_PRE(0,%r10)
 	stwcx.	%r5,0,%r10
 	beqlr+
 	b	1b

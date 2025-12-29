@@ -49,7 +49,7 @@ ENTRY(_atomic_##op##_32)	; \
 	mr	%r10,%r3	; \
 1:	lwarx	%r3,0,%r10	; \
 	insn	%r5,%r3,arg	; \
-	IBM405_ERRATA77_DCBT(0,%r10) ; \
+	POWERPC_STWCX_PRE(0,%r10) ; \
 	stwcx.	%r5,0,%r10	; \
 	beqlr+			; \
 	b	1b		; \
@@ -72,7 +72,7 @@ ENTRY(_atomic_##op##_32_nv)	; \
 	mr	%r10,%r3	; \
 1:	lwarx	%r3,0,%r10	; \
 	insn	%r3,%r3,arg	; \
-	IBM405_ERRATA77_DCBT(0,%r10) ; \
+	POWERPC_STWCX_PRE(0,%r10) ; \
 	stwcx.	%r3,0,%r10	; \
 	beqlr+			; \
 	b	1b		; \
