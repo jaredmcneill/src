@@ -17,7 +17,7 @@ MAN=		glint.4
 CPPFLAGS+=	-DSPARC_MMIO_IS_BE
 .endif
 
-.if ${MACHINE_ARCH} == "powerpc"
+.if ${MACHINE_CPU} == "powerpc"
 CPPFLAGS+=	-DPPC_MMIO_IS_BE
 .endif
 

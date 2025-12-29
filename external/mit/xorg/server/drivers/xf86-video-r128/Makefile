@@ -9,7 +9,7 @@ SRCS=	r128_accel.c r128_cursor.c r128_driver.c r128_exa.c \
 
 MAN=	r128.4
 
-.if ${MACHINE_ARCH} == "powerpc" || ${MACHINE} == "sparc64"
+.if ${MACHINE_CPU} == "powerpc" || ${MACHINE} == "sparc64"
 CPPFLAGS+= -DAVOID_FBDEV
 .endif
 

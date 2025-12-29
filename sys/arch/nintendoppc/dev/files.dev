@@ -1,0 +1,75 @@
+# $NetBSD$
+#
+#
+
+attach	genfb at mainbus with wiifb
+file	arch/nintendoppc/dev/wiifb.c		wiifb
+
+attach	genfb at mainbus with wiiufb
+file	arch/nintendoppc/dev/wiiufb.c		wiiufb
+
+device	bwai
+attach	bwai at mainbus
+file	arch/nintendoppc/dev/bwai.c		bwai
+
+device	bwdsp: audiobus
+attach	bwdsp at mainbus
+file	arch/nintendoppc/dev/bwdsp.c		bwdsp
+
+define	exi { }
+device	exi: exi
+attach	exi at mainbus
+file	arch/nintendoppc/dev/exi.c		exi
+
+device	rtcsram
+attach	rtcsram at exi
+file	arch/nintendoppc/dev/rtcsram.c		rtcsram
+
+device	gecko
+attach	gecko at exi
+file	arch/nintendoppc/dev/gecko.c		gecko	needs-flag
+
+define	si { }
+device	si: si, hid
+attach	si at mainbus
+file	arch/nintendoppc/dev/si.c		si
+
+attach	uhid at si with uhid_si
+file	arch/nintendoppc/dev/uhid_si.c		uhid_si
+
+define	ahb { [addr=-1], [irq=-1] }
+device	ahb: ahb
+attach	ahb at mainbus
+file	arch/nintendoppc/dev/ahb.c		ahb
+
+device	resetbtn : sysmon_power, sysmon_taskq
+attach	resetbtn at ahb 
+file	arch/nintendoppc/dev/resetbtn.c		resetbtn
+
+device	hwgpio: gpiobus
+attach	hwgpio at ahb
+file	arch/nintendoppc/dev/hwgpio.c		hwgpio
+
+attach	ehci at ahb with ehci_ahb
+file	arch/nintendoppc/dev/ehci_ahb.c		ehci_ahb
+
+attach	ohci at ahb with ohci_ahb
+file	arch/nintendoppc/dev/ohci_ahb.c		ohci_ahb
+
+attach	sdhc at ahb with sdhc_ahb
+file	arch/nintendoppc/dev/sdhc_ahb.c		sdhc_ahb
+
+device	avenc
+attach	avenc at iic
+file	arch/nintendoppc/dev/avenc.c		avenc
+
+device 	di: scsi
+attach	di at ahb
+file	arch/nintendoppc/dev/di.c		di
+
+device	hwaes
+attach	hwaes at ahb
+file	arch/nintendoppc/dev/hwaes.c		hwaes
+
+attach	ahcisata at ahb with ahcisata_ahb
+file	arch/nintendoppc/dev/ahcisata_ahb.c 	ahcisata_ahb

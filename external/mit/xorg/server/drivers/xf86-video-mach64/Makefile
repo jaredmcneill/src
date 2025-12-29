@@ -20,7 +20,7 @@ SRCS.exa=	atimach64exa.c
 
 CPPFLAGS+=	-DUSE_EXA
 
-.if ${MACHINE_ARCH} == "powerpc" || ${MACHINE_ARCH} == "sparc64" || \
+.if ${MACHINE_CPU} == "powerpc" || ${MACHINE_ARCH} == "sparc64" || \
     ${MACHINE_ARCH} == "sparc"
 CPPFLAGS+=	 -DAVOID_CPIO
 .endif

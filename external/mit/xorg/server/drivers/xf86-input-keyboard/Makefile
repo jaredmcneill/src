@@ -14,6 +14,7 @@ CPPFLAGS+=	-DPCVT_SUPPORT
 # tables in the X driver so make it the default only where we know it will work
 
 .if ${MACHINE_ARCH} == "powerpc" || \
+    ${MACHINE_ARCH} == "powerpc-espresso" || \
     ${MACHINE} == "amiga" || \
     ${MACHINE} == "evbarm" || \
     ${MACHINE} == "ews4800mips" || \

@@ -318,8 +318,7 @@ CPPFLAGS+=	-DHAVE_LDOUBLE_IEEE_QUAD_LITTLE=1
 .endif
 
 .if ${MACHINE_ARCH} == "sparc64" || \
-    ${MACHINE_ARCH} == "powerpc" || \
-    ${MACHINE_ARCH} == "powerpc64" || \
+    ${MACHINE_CPU} == "powerpc" || \
     !empty(MACHINE_ARCH:Mmips*64eb)
 CPPFLAGS+=	-DHAVE_LDOUBLE_IEEE_QUAD_BIG=1
 .endif

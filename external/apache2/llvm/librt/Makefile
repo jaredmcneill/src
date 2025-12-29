@@ -70,7 +70,7 @@ SUBDIR+= \
 SUBDIR+= \
 	libLLVMMipsCodeGen
 .endif
-.if ${MACHINE_ARCH} == "powerpc" || ${MACHINE_ARCH} == "powerpc64"
+.if ${MACHINE_CPU} == "powerpc"
 SUBDIR+= \
 	libLLVMPowerPCCodeGen
 .endif
@@ -122,7 +122,7 @@ SUBDIR+= \
 	libLLVMMipsTargetInfo
 .endif
 
-.if ${MACHINE_ARCH} == "powerpc" || ${MACHINE_ARCH} == "powerpc64"
+.if ${MACHINE_CPU} == "powerpc"
 SUBDIR+= \
 	libLLVMPowerPCAsmParser \
 	libLLVMPowerPCDisassembler \

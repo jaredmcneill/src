@@ -1,0 +1,22 @@
+#	$NetBSD$
+#
+# standard, required NetBSD/nintendoppc 'options'
+
+machine		nintendoppc powerpc
+include		"conf/std"	# MI standard options
+
+options 	PPC_OEA		# IBM PPC750CXe derived CPUs
+makeoptions 	PPCDIR="oea"	# Tell Makefile.powerpc what dir to use
+
+# Executable support:
+options 	EXEC_ELF32	# exec ELF binaries
+options 	EXEC_SCRIPT	# exec #! scripts
+
+options 	VMSWAP_DEFAULT_PLAINTEXT	# do not encrypt swap by
+						# default (slow cpu)
+
+options 	INTSTK=0x2000
+
+makeoptions	TEXTADDR=0x4000
+options 	DISTANT_KERNEL
+makeoptions 	EXTRA_LINKFLAGS="-q"

@@ -100,7 +100,7 @@ INCS=	adxintrin.h \
 	xsavesintrin.h \
 	xtestintrin.h
 
-.elif ${MACHINE_ARCH} == "powerpc" || ${MACHINE_ARCH} == "powerpc64"
+.elif ${MACHINE_CPU} == "powerpc"
 INCS=	altivec.h \
 	htmintrin.h \
 	htmxlintrin.h
@@ -357,7 +357,7 @@ NATIVE_LLVM_ARCH=		ARM
 NATIVE_LLVM_ARCH=		Mips
 .endif
 
-.if ${MACHINE_ARCH} == "powerpc" || ${MACHINE_ARCH} == "powerpc64"
+.if ${MACHINE_CPU} == "powerpc"
 NATIVE_LLVM_ARCH=		PowerPC
 .endif
 

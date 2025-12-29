@@ -39,6 +39,7 @@ SUBDIR += arch/mipsco
 SUBDIR += arch/mvme68k
 SUBDIR += arch/news68k
 SUBDIR += arch/newsmips
+SUBDIR += arch/nintendoppc
 SUBDIR += arch/ofppc
 SUBDIR += arch/playstation2
 SUBDIR += arch/pmax

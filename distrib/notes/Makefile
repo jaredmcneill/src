@@ -35,6 +35,7 @@ SUBDIR+= mvme68k
 SUBDIR+= news68k
 SUBDIR+= newsmips
 SUBDIR+= next68k
+SUBDIR+= nintendoppc
 SUBDIR+= ofppc
 SUBDIR+= pmax
 SUBDIR+= prep

@@ -1,0 +1,10 @@
+#
+#	from: @(#)ttys	5.1 (Berkeley) 4/17/89
+#	$NetBSD$
+#
+# name	getty				type	status		comments
+#
+ttyE0	"/usr/libexec/getty Pc"		wsvt25	on secure
+ttyE1	"/usr/libexec/getty Pc"		wsvt25	on secure
+ttyE2	"/usr/libexec/getty Pc"		wsvt25	on secure
+ttyE3	"/usr/libexec/getty Pc"		wsvt25	on secure

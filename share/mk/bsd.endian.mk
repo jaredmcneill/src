@@ -23,8 +23,7 @@ TARGET_ENDIANNESS=	1234
       ${MACHINE_ARCH} == "m68k" || \
       ${MACHINE_ARCH} == "m68ksf" || \
       ${MACHINE_ARCH} == "or1k" || \
-      ${MACHINE_ARCH} == "powerpc" || \
-      ${MACHINE_ARCH} == "powerpc64" || \
+      ${MACHINE_ARCH:Mpowerpc*} || \
       ${MACHINE_ARCH} == "sparc" || \
       ${MACHINE_ARCH} == "sparc64" || \
       ${MACHINE_ARCH:C/^.*eb$/eb/} == "eb"

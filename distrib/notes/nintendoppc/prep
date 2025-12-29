@@ -1,0 +1,3 @@
+.\"	$NetBSD$
+.
+.so ../common/netboot

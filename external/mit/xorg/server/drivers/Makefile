@@ -276,6 +276,11 @@ SUBDIR+= \
 	xf86-video-wsfb
 .endif	# ${MACHINE} == "newsmips"
 
+.if ${MACHINE} == "nintendoppc"
+SUBDIR+= \
+	xf86-video-wsfb
+.endif	# ${MACHINE} == "nintendoppc"
+
 .if ${MACHINE} == "ofppc"
 SUBDIR+= \
 	xf86-video-ati \

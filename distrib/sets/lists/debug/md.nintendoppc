@@ -1,0 +1,4 @@
+# $NetBSD$
+#
+./usr/libdata/debug/netbsd-GENERIC.debug	comp-sysutil-debug	debug
+./usr/libdata/debug/netbsd-INSTALL.debug	comp-sysutil-debug	debug

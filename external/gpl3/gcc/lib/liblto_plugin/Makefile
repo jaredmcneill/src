@@ -8,6 +8,8 @@ LIB=		liblto_plugin
 DIST=		${GCCDIST}
 GNUHOSTDIST=	${DIST}
 
+GCC_MACHINE_ARCH?=${MACHINE_ARCH:S/earmv5/earm/}
+
 SRCS=		lto-plugin.c hashtab.c simple-object.c pex-unix.c \
 		pex-common.c argv.c make-temp-file.c concat.c \
 		simple-object-elf.c simple-object-mach-o.c \
@@ -57,7 +59,7 @@ config.h: Makefile
 	rm -rf .ab
 
 # Fetch ${G_version}
-GCCARCH=	${.CURDIR}/../../usr.bin/gcc/arch/${MACHINE_ARCH:S/earmv5/earm/}
+GCCARCH=	${.CURDIR}/../../usr.bin/gcc/arch/${GCC_MACHINE_ARCH}
 .include "${GCCARCH}/defs.mk"
 
 CPPFLAGS+=	-DBASE_VERSION=\"${G_version}\"
