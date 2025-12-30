@@ -6,6 +6,7 @@ maxpartitions 16
 maxusers 2 8 64
 
 include "arch/powerpc/pic/files.pic"
+include "arch/powerpc/pic/files.ipi"
 
 file	kern/subr_disk_mbr.c
 file	arch/powerpc/powerpc/bus_dma.c
@@ -15,8 +16,9 @@ file	dev/cons.c
 
 file	arch/nintendoppc/nintendoppc/autoconf.c
 file	arch/powerpc/powerpc/clock.c
-file	arch/nintendoppc/nintendoppc/pic_pi.c
 file	arch/nintendoppc/nintendoppc/machdep.c
+file	arch/nintendoppc/nintendoppc/pic_pi.c
+file	arch/nintendoppc/nintendoppc/ipi_latte.c	multiprocessor
 
 include "arch/nintendoppc/conf/majors.nintendoppc"
 
@@ -40,9 +42,11 @@ file dev/md_root.c	memory_disk_hooks
 define	mainbus { [addr=-1], [irq=-1] }
 device	mainbus: mainbus
 attach	mainbus at root
+file	arch/nintendoppc/nintendoppc/mainbus.c		mainbus
+
 device	cpu
 attach	cpu at mainbus
-file	arch/nintendoppc/nintendoppc/mainbus.c		mainbus | cpu	needs-flag
+file	arch/nintendoppc/nintendoppc/cpu.c		cpu
 
 #
 # Platform devices

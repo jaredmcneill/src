@@ -81,6 +81,7 @@ void
 mainbus_attach(device_t parent, device_t self, void *aux)
 {
 	struct mainbus_attach_args maa;
+	int maxcpu, n;
 
 	aprint_normal(": Nintendo Wii%s%s\n",
 	    wiiu_plat ? " U" : "",
@@ -89,10 +90,14 @@ mainbus_attach(device_t parent, device_t self, void *aux)
 	maa.maa_bst = &wii_mem_tag;
 	maa.maa_dmat = &wii_bus_dma_tag;
 
-	maa.maa_name = "cpu";
-	maa.maa_addr = MAINBUSCF_ADDR_DEFAULT;
-	maa.maa_irq = MAINBUSCF_IRQ_DEFAULT;
-	config_found(self, &maa, mainbus_print, CFARGS_NONE);
+	maxcpu = wiiu_native ? 3 : 1;
+
+	for (n = 0; n < maxcpu; n++) {
+		maa.maa_name = "cpu";
+		maa.maa_addr = MAINBUSCF_ADDR_DEFAULT;
+		maa.maa_irq = MAINBUSCF_IRQ_DEFAULT;
+		config_found(self, &maa, mainbus_print, CFARGS_NONE);
+	}
 
 	maa.maa_name = "exi";
 	maa.maa_addr = EXI_BASE;
@@ -125,34 +130,4 @@ mainbus_attach(device_t parent, device_t self, void *aux)
 		maa.maa_irq = PI_IRQ_SI;
 		config_found(self, &maa, mainbus_print, CFARGS_NONE);
 	}
-}
-
-static int	cpu_match(device_t, cfdata_t, void *);
-static void	cpu_attach(device_t, device_t, void *);
-
-CFATTACH_DECL_NEW(cpu, 0,
-    cpu_match, cpu_attach, NULL, NULL);
-
-extern struct cfdriver cpu_cd;
-
-int
-cpu_match(device_t parent, cfdata_t cf, void *aux)
-{
-	struct mainbus_attach_args *maa = aux;
-
-	if (strcmp(maa->maa_name, cpu_cd.cd_name) != 0) {
-		return 0;
-	}
-
-	if (cpu_info[0].ci_dev != NULL) {
-		return 0;
-	}
-
-	return 1;
-}
-
-void
-cpu_attach(device_t parent, device_t self, void *aux)
-{
-	cpu_attach_common(self, 0);
 }

@@ -7,7 +7,7 @@
 # to update the release documentation in distrib/notes/common/contents
 
 KERNEL_SETS+=		GENERIC
-#KERNEL_SETS+=		GENERIC.MP
+KERNEL_SETS+=		GENERIC.MP
 BUILD_KERNELS+=		INSTALL
 #BUILD_KERNELS+=	INSTALL.MP
 

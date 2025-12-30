@@ -463,6 +463,7 @@ void	oea_init(void (*)(void));
 void	oea_startup(const char *);
 void	oea_dumpsys(void);
 void	oea_install_extint(void (*)(void));
+void	oea_install_extint_vec(void (*)(void), u_int);
 paddr_t	kvtop(void *);
 
 extern paddr_t msgbuf_paddr;

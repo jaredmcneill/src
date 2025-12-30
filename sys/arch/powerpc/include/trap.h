@@ -64,6 +64,9 @@
 /* The following are only available on 750/7400: */
 #define	EXC_THRM	0x1700		/* Thermal Management Interrupt */
 
+/* The following are only available on IBM Espresso: */
+#define EXC_IPI		0x1700		/* Inter-processor Interrupt */
+
 /* And these are only on the 603: */
 #define	EXC_IMISS	0x1000		/* Instruction translation miss */
 #define	EXC_DLMISS	0x1100		/* Data load translation miss */

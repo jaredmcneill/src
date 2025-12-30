@@ -71,6 +71,7 @@ __KERNEL_RCSID(0, "$NetBSD: machdep.c,v 1.12 2025/11/15 17:59:23 jmcneill Exp $"
 #include "opt_inet.h"
 #include "opt_ns.h"
 #include "opt_oea.h"
+#include "opt_multiprocessor.h"
 
 #include <sys/param.h>
 #include <sys/buf.h>
@@ -100,6 +101,8 @@ __KERNEL_RCSID(0, "$NetBSD: machdep.c,v 1.12 2025/11/15 17:59:23 jmcneill Exp $"
 #include <machine/wii.h>
 #include <machine/wiiu.h>
 #include <arch/nintendoppc/dev/gecko.h>
+#include <arch/nintendoppc/nintendoppc/pic_pi.h>
+#include <arch/nintendoppc/nintendoppc/ipi_latte.h>
 
 #include <powerpc/bus_funcs.h>
 #include <powerpc/db_machdep.h>
@@ -131,11 +134,26 @@ __KERNEL_RCSID(0, "$NetBSD: machdep.c,v 1.12 2025/11/15 17:59:23 jmcneill Exp $"
 #define WII_DEFAULT_CMDLINE "root=ld0a"
 #endif
 
+#define  HID0_DPM		0x00100000	/* Dynamic power management */
+#define  HID0_NHR		0x00010000	/* Not hard reset */
+#define  HID0_ICE		0x00008000	/* Instruction cache enable */
+#define  HID0_DCE		0x00004000	/* Data cache enable */
+#define  HID0_BTIC		0x00000020	/* BTI cache enable */
+#define  HID0_BHT		0x00000004	/* Branch history table enable */
+
 #define IBM750CL_SPR_HID4	1011
+#define  HID4_L2FM_64B		0x20000000	/* L2 fetch mode - 64B-fetch */
+#define  HID4_BPD_4		0x10000000	/* Bus pipeline depth - 4 */
+#define  HID4_ST0		0x01000000	/* Store 0 enable */
 #define  HID4_DBP		0x00400000	/* Data bus parking */
 #define	 HID4_L2_CCFI		0x00100000	/* L2 complete castout prior
 						 * to L2 flash invalidate.
 						 */
+
+#define IBMESPRESSO_SPR_HID5	944
+#define  HID5_H5A		0x80000000	/* Enable HID5 */
+#define  HID5_PIRE		0x40000000	/* Enable PIR */
+#define IBMESPRESSO_SPR_CAR	948
 
 #define MINI_MEM2_START		0x13f00000	/* Start of reserved MEM2 for MINI */
 
@@ -356,7 +374,7 @@ initppc(u_int startkernel, u_int endkernel, u_int args, void *btinfo)
 	extern uint32_t ticks_per_sec;
 	extern uint32_t ticks_per_msec;
 	extern unsigned char edata[], end[];
-	register_t scratch;
+	register_t scratch, spr;
 
 	memset(&edata, 0, end - edata); /* clear BSS */
 	wii_cmdline[0] = '\0';
@@ -378,13 +396,35 @@ initppc(u_int startkernel, u_int endkernel, u_int args, void *btinfo)
 	boothowto = BOOTHOWTO;
 #endif
 
+	spr = mfspr(IBM750CL_SPR_HID4);
 	/*
 	 * HID4[L2_CCFI] must be set to 1 for correct operation of L2 cache.
 	 * HID4[DBP] must be set to 1 to support multiple bus masters.
 	 */
-	mtspr(IBM750CL_SPR_HID4,
-	    mfspr(IBM750CL_SPR_HID4) | HID4_L2_CCFI | HID4_DBP);
+	spr |= HID4_L2_CCFI;
+	spr |= HID4_DBP;
+	if (wiiu_native) {
+		spr |= HID4_L2FM_64B;
+		spr |= HID4_BPD_4;
+		spr |= HID4_ST0;
+	}
+	mtspr(IBM750CL_SPR_HID4, spr);
 	asm volatile ("isync");
+
+	if (wiiu_native) {
+		spr = mfspr(IBMESPRESSO_SPR_HID5);
+		mtspr(IBMESPRESSO_SPR_HID5, spr | HID5_H5A | HID5_PIRE);
+
+		mtspr(SPR_HID0, HID0_DPM | HID0_NHR | HID0_ICE | HID0_DCE |
+				HID0_BTIC | HID0_BHT);
+
+		/* Espresso magic */
+		mtspr(IBMESPRESSO_SPR_CAR,
+		    mfspr(IBMESPRESSO_SPR_CAR) | 0xfc100000);
+		mtspr(IBMESPRESSO_SPR_HID5,
+		    mfspr(IBMESPRESSO_SPR_HID5) | 0x67fdc000);
+		asm volatile ("isync");
+	}
 
 	/* Configure L2 cache */
 	l2cr_config = L2CR_L2E | L2CR_L2PE;
@@ -398,7 +438,9 @@ initppc(u_int startkernel, u_int endkernel, u_int args, void *btinfo)
 	 * Initialize the BAT registers
 	 */
 	if (wiiu_native) {
-		oea_batinit(0);
+		oea_batinit(
+		    WII_IOMEM_BASE, BAT_BL_32M,
+		    0);
 	} else {
 		oea_batinit(
 		    EFB_BASE, BAT_BL_128M,
@@ -451,8 +493,6 @@ mem_regions(struct mem_region **mem, struct mem_region **avail)
 void
 cpu_startup(void)
 {
-	extern void pi_init_intr(void);
-
 	oea_startup(NULL);
 
 	/*
@@ -464,6 +504,13 @@ cpu_startup(void)
 	pic_init();
 	pi_init_intr();
 	oea_install_extint(pic_ext_intr);
+
+#ifdef MULTIPROCESSOR
+	if (wiiu_native) {
+		ipi_latte_init();
+		oea_install_extint_vec(pic_ext_intr, EXC_IPI);
+	}
+#endif
 }
 
 /*
@@ -570,7 +617,9 @@ static void
 wii_poweroff(void)
 {
 	if (wiiu_native) {
-		wiiu_wood_ipc(0xcafe0001);
+#if notyet
+		wiiu_wood_ipc(0xcafe0001);	/* CMD_POWEROFF */
+#endif
 	} else {
 		out32(HW_GPIOB_OUT, in32(HW_GPIOB_OUT) | __BIT(GPIO_SHUTDOWN));
 	}
@@ -580,7 +629,11 @@ static void
 wii_reset(void)
 {
 	if (wiiu_native) {
-		wiiu_wood_ipc(0xcafe0002);
+#if notyet
+		wiiu_wood_ipc(0xcafe0002);	/* CMD_REBOOT */
+#else
+		wiiu_wood_ipc(0xcafe0001);	/* CMD_POWEROFF */
+#endif
 	} else {
 		out32(HW_RESETS, in32(HW_RESETS) & ~RSTBINB);
 	}

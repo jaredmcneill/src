@@ -128,7 +128,7 @@ config		netbsd	root on ? type ?
 
 mainbus0 at root
 
-cpu0		at mainbus0
+cpu*		at mainbus0
 genfb0		at mainbus0
 wsdisplay*      at wsemuldisplaydev?
 options 	WSEMUL_VT100

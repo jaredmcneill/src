@@ -54,8 +54,11 @@
 #define WIIU_DSP_BASE			0x0c280000
 
 /* Processor interface registers */
-#define WIIU_PI_INTSR0			(WIIU_PI_BASE + 0x78)
-#define WIIU_PI_INTMSK0			(WIIU_PI_BASE + 0x7c)
+#define WIIU_PI_INTSR(n)		(WIIU_PI_BASE + 0x78 + (n) * 8)
+#define WIIU_PI_INTMSK(n)		(WIIU_PI_BASE + 0x7c + (n) * 8)
+
+/* Latte IRQs */
+#define WIIU_PI_IRQ_MB_CPU(n)		(20 + (n))
 
 /* Latte registers */
 #define LT_PPCnINT1STS(n)		(HOLLYWOOD_PRIV_BASE + 0x440 + (n) * 0x10)
@@ -80,6 +83,14 @@
 /* GPIOs */
 #define WIIU_GPIO_POWER			0
 
+/* Espresso SPRs. */
+#define SPR_SCR				0x3B3
+#define  SPR_SCR_IPI_PEND(cpunum)	__BIT(20 - (cpunum))
+#define  SPR_SCR_WAKE(cpunum)		__BIT(23 - (cpunum))
+
+/* Boot vector */
+#define WIIU_BOOT_VECTOR		0x08100100
+
 /* Command line protocol */
 #define WIIU_ARGV_MAGIC			0xCAFEFECA
 struct wiiu_argv {
@@ -90,7 +101,7 @@ struct wiiu_argv {
 };
 #define WIIU_ARGV_DATA			((volatile struct wiiu_argv *)0x89200000)
 
-/* Declared in sys/arch/nintendoppc/wii/machdep.c */
+/* Declared in sys/arch/nintendoppc/nintendoppc/machdep.c */
 extern bool wiiu_plat;
 extern bool wiiu_native;
 

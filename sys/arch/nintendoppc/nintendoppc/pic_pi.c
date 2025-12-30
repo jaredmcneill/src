@@ -32,59 +32,101 @@
  */
 
 #include <sys/cdefs.h>
-
 __KERNEL_RCSID(0, "$NetBSD: pic_pi.c,v 1.4 2025/03/13 18:41:34 jmcneill Exp $");
+
+#include "opt_multiprocessor.h"
 
 #include <sys/param.h>
 #include <sys/intr.h>
 #include <sys/systm.h>
 #include <sys/bus.h>
 #include <sys/bitops.h>
+#include <sys/cpu.h>
+#include <powerpc/include/spr.h>
 #include <machine/pio.h>
 #include <machine/intr.h>
 #include <arch/powerpc/pic/picvar.h>
+#include <arch/powerpc/pic/ipivar.h>
 #include <machine/wii.h>
 #include <machine/wiiu.h>
 
-static uint32_t pic_irqmask;
-static uint32_t pic_actmask;
-static uint32_t pic_intsr;
-static uint32_t pic_intmr;
+#include "pic_pi.h"
 
-void pi_init_intr(void);
+struct pic_state {
+	uint32_t irqmask;
+	uint32_t actmask;
+	uint32_t intsr;
+	uint32_t intmr;
+} __aligned(32);
+
+static struct pic_state pic_s[CPU_MAXNUM];
 
 #define WR4(reg, val)	out32(reg, val)
 #define RD4(reg)	in32(reg)
 
+#ifdef MULTIPROCESSOR
+extern struct ipi_ops ipiops;
+
+#define IRQ_IS_IPI(_irq)	\
+    ((_irq) >= WIIU_PI_IRQ_MB_CPU(0) && (_irq) <= WIIU_PI_IRQ_MB_CPU(2))
+#endif
+
+static u_int
+pi_irq_affinity(int irq)
+{
+#ifdef MULTIPROCESSOR
+	if (wiiu_native && IRQ_IS_IPI(irq)) {
+		return irq - WIIU_PI_IRQ_MB_CPU(0);
+	}
+#endif
+	return 0;
+}
+
 static void
 pi_enable_irq(struct pic_ops *pic, int irq, int type)
 {
-	pic_irqmask |= __BIT(irq);
-	WR4(pic_intmr, pic_irqmask & ~pic_actmask);
+	const u_int cpu_num = pi_irq_affinity(irq);
+
+	pic_s[cpu_num].irqmask |= __BIT(irq);
+	WR4(pic_s[cpu_num].intmr, pic_s[cpu_num].irqmask & ~pic_s[cpu_num].actmask);
 }
 
 static void
 pi_disable_irq(struct pic_ops *pic, int irq)
 {
-	pic_irqmask &= ~__BIT(irq);
-	WR4(pic_intmr, pic_irqmask & ~pic_actmask);
+	const u_int cpu_num = pi_irq_affinity(irq);
+
+	pic_s[cpu_num].irqmask &= ~__BIT(irq);
+	WR4(pic_s[cpu_num].intmr, pic_s[cpu_num].irqmask & ~pic_s[cpu_num].actmask);
 }
 
 static int
 pi_get_irq(struct pic_ops *pic, int mode)
 {
+	const u_int cpu_num = cpu_number();
 	uint32_t raw, pend;
 	int irq;
 
-	raw = RD4(pic_intsr);
-	pend = raw & pic_irqmask;
+#ifdef MULTIPROCESSOR
+	if (wiiu_native) {
+		uint32_t spr = mfspr(SPR_SCR);
+
+		if ((spr & SPR_SCR_IPI_PEND(cpu_num)) != 0) {
+			mtspr(SPR_SCR, spr & ~SPR_SCR_IPI_PEND(cpu_num));
+			return WIIU_PI_IRQ_MB_CPU(cpu_num);
+		}
+	}
+#endif
+
+	raw = RD4(pic_s[cpu_num].intsr);
+	pend = raw & pic_s[cpu_num].irqmask;
 	if (pend == 0) {
 		return 255;
 	}
 	irq = ffs32(pend) - 1;
 
-	pic_actmask |= __BIT(irq);
-	WR4(pic_intmr, pic_irqmask & ~pic_actmask);
+	pic_s[cpu_num].actmask |= __BIT(irq);
+	WR4(pic_s[cpu_num].intmr, pic_s[cpu_num].irqmask & ~pic_s[cpu_num].actmask);
 
 	return irq;
 }
@@ -92,9 +134,11 @@ pi_get_irq(struct pic_ops *pic, int mode)
 static void
 pi_ack_irq(struct pic_ops *pic, int irq)
 {
-	pic_actmask &= ~__BIT(irq);
-	WR4(pic_intmr, pic_irqmask & ~pic_actmask);
-	WR4(pic_intsr, __BIT(irq));
+	const u_int cpu_num = cpu_number();
+
+	pic_s[cpu_num].actmask &= ~__BIT(irq);
+	WR4(pic_s[cpu_num].intmr, pic_s[cpu_num].irqmask & ~pic_s[cpu_num].actmask);
+	WR4(pic_s[cpu_num].intsr, __BIT(irq));
 }
 
 static struct pic_ops pic = {
@@ -112,19 +156,23 @@ static struct pic_ops pic = {
 void
 pi_init_intr(void)
 {
-	pic_irqmask = 0;
-	pic_actmask = 0;
-	if (wiiu_native) {
-		pic_intmr = WIIU_PI_INTMSK0;
-		pic_intsr = WIIU_PI_INTSR0;
-	} else {
-		pic_intmr = PI_INTMR;
-		pic_intsr = PI_INTSR;
-	}
+	u_int cpu_num;
 
-	/* Mask and clear all interrupts. */
-	WR4(pic_intmr, 0);
-	WR4(pic_intsr, ~0U);
+	for (cpu_num = 0; cpu_num < CPU_MAXNUM; cpu_num++) {
+		pic_s[cpu_num].irqmask = 0;
+		pic_s[cpu_num].actmask = 0;
+		if (wiiu_native) {
+			pic_s[cpu_num].intmr = WIIU_PI_INTMSK(cpu_num);
+			pic_s[cpu_num].intsr = WIIU_PI_INTSR(cpu_num);
+		} else {
+			pic_s[cpu_num].intmr = PI_INTMR;
+			pic_s[cpu_num].intsr = PI_INTSR;
+		}
+
+		/* Mask and clear all interrupts. */
+		WR4(pic_s[cpu_num].intmr, 0);
+		WR4(pic_s[cpu_num].intsr, ~0U);
+	}
 
 	pic_add(&pic);
 }
