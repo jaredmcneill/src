@@ -1808,7 +1808,10 @@ sdhc_start_command(struct sdhc_host *hp, struct sdmmc_command *cmd)
 	}
 
 	/* Set DMA start address. */
-	if (ISSET(hp->flags, SHF_USE_ADMA2_MASK) && cmd->c_data != NULL) {
+	if (ISSET(mode, SDHC_DMA_ENABLE) &&
+	    ISSET(hp->flags, SHF_USE_ADMA2_MASK) &&
+	    cmd->c_data != NULL) {
+		KASSERT(cmd->c_dmamap != NULL);
 		for (int seg = 0; seg < cmd->c_dmamap->dm_nsegs; seg++) {
 			bus_addr_t paddr =
 			    cmd->c_dmamap->dm_segs[seg].ds_addr;
