@@ -2197,8 +2197,12 @@ sdmmc_mem_read_block(struct sdmmc_function *sf, uint32_t blkno, u_char *data,
 	/* DMA transfer */
 	error = bus_dmamap_load(sc->sc_dmat, sc->sc_dmap, data, datalen, NULL,
 	    BUS_DMA_NOWAIT|BUS_DMA_READ);
-	if (error)
+	if (error) {
+		/* Fallback to PIO */
+		error = sdmmc_mem_read_block_subr(sf, NULL, blkno, data,
+		    datalen);
 		goto out;
+	}
 
 #ifdef SDMMC_DEBUG
 	printf("data=%p, datalen=%zu\n", data, datalen);
@@ -2442,8 +2446,12 @@ sdmmc_mem_write_block(struct sdmmc_function *sf, uint32_t blkno, u_char *data,
 	/* DMA transfer */
 	error = bus_dmamap_load(sc->sc_dmat, sc->sc_dmap, data, datalen, NULL,
 	    BUS_DMA_NOWAIT|BUS_DMA_WRITE);
-	if (error)
+	if (error) {
+		/* Fallback to PIO */
+		error = sdmmc_mem_write_block_subr(sf, NULL, blkno, data,
+		    datalen);
 		goto out;
+	}
 
 #ifdef SDMMC_DEBUG
 	aprint_normal_dev(sc->sc_dev, "%s: data=%p, datalen=%zu\n",
