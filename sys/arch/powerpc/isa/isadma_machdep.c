@@ -208,13 +208,13 @@ _isa_bus_dmamap_create(bus_dma_tag_t t, bus_size_t size, int nsegments,
 	 * the caller can't handle that many segments (e.g. the
 	 * ISA DMA controller), we may have to bounce it as well.
 	 */
-	if (avail_end <= t->_bounce_thresh ||
+	if (avail_end <= t->_bounce_thresh_max ||
 	    (flags & ISABUS_DMA_32BIT) != 0) {
 		/* Bouncing not necessary due to memory size. */
-		map->_dm_bounce_thresh = 0;
+		map->_dm_bounce_thresh_max = 0;
 	}
 	cookieflags = 0;
-	if (map->_dm_bounce_thresh != 0 ||
+	if (map->_dm_bounce_thresh_max != 0 ||
 	    ((map->_dm_size / PAGE_SIZE) + 1) > map->_dm_segcnt) {
 		cookieflags |= ID_MIGHT_NEED_BOUNCE;
 		cookiesize += (sizeof(bus_dma_segment_t) * map->_dm_segcnt);

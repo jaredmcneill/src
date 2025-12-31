@@ -121,7 +121,7 @@ CFATTACH_DECL_NEW(plb, 0, plb_match, plb_attach, NULL, NULL);
  * "generic" DMA struct, nothing special.
  */
 struct powerpc_bus_dma_tag ibm4xx_default_bus_dma_tag = {
-	0,			/* _bounce_thresh */
+	0, 0,			/* _bounce_thresh_min/max */
 	_bus_dmamap_create,
 	_bus_dmamap_destroy,
 	_bus_dmamap_load,

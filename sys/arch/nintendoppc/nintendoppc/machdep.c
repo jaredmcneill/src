@@ -202,7 +202,7 @@ wii_mem2_dmamem_alloc(bus_dma_tag_t t, bus_size_t size, bus_size_t alignment,
 }
 
 struct powerpc_bus_dma_tag wii_bus_dma_tag = {
-	0,				/* _bounce_thresh */
+	0, 0,				/* _bounce_thresh_min/max */
 	_bus_dmamap_create,
 	_bus_dmamap_destroy,
 	_bus_dmamap_load,
@@ -221,7 +221,7 @@ struct powerpc_bus_dma_tag wii_bus_dma_tag = {
 };
 
 struct powerpc_bus_dma_tag wii_mem2_bus_dma_tag = {
-	0,				/* _bounce_thresh */
+	WII_MEM2_BASE, 0,		/* _bounce_thresh_min/max */
 	_bus_dmamap_create,
 	_bus_dmamap_destroy,
 	_bus_dmamap_load,

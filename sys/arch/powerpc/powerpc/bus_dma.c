@@ -125,7 +125,8 @@ _bus_dmamap_create(bus_dma_tag_t t, bus_size_t size, int nsegments, bus_size_t m
 	map->_dm_segcnt = nsegments;
 	map->_dm_maxmaxsegsz = maxsegsz;
 	map->_dm_boundary = boundary;
-	map->_dm_bounce_thresh = t->_bounce_thresh;
+	map->_dm_bounce_thresh_min = t->_bounce_thresh_min;
+	map->_dm_bounce_thresh_max = t->_bounce_thresh_max;
 	map->_dm_flags = flags & ~(BUS_DMA_WAITOK|BUS_DMA_NOWAIT);
 	map->dm_maxsegsz = maxsegsz;
 	map->dm_mapsize = 0;		/* no valid mappings */
@@ -182,8 +183,10 @@ _bus_dmamap_load_buffer(bus_dma_tag_t t, bus_dmamap_t map, void *buf, bus_size_t
 		 * If we're beyond the bounce threshold, notify
 		 * the caller.
 		 */
-		if (map->_dm_bounce_thresh != 0 &&
-		    curaddr >= map->_dm_bounce_thresh)
+		if (map->_dm_bounce_thresh_min != 0 &&
+		    curaddr < map->_dm_bounce_thresh_min)
+		if (map->_dm_bounce_thresh_max != 0 &&
+		    curaddr >= map->_dm_bounce_thresh_max)
 			return (EINVAL);
 
 		/*
@@ -432,8 +435,11 @@ _bus_dmamap_load_raw(bus_dma_tag_t t, bus_dmamap_t map,
 		 * If we're beyond the bounce threshold, notify
 		 * the caller.
 		 */
-		if (map->_dm_bounce_thresh != 0 &&
-		    curaddr >= map->_dm_bounce_thresh)
+		if (map->_dm_bounce_thresh_min != 0 &&
+		    curaddr < map->_dm_bounce_thresh_min)
+			return EINVAL;
+		if (map->_dm_bounce_thresh_max != 0 &&
+		    curaddr >= map->_dm_bounce_thresh_max)
 			return EINVAL;
 
 		/*
