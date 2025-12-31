@@ -179,6 +179,19 @@ static const struct fmttab cpu_ibm750_l2cr_formats[] = {
 	{ 0, 0, NULL }
 };
 
+static const struct fmttab cpu_espresso_2m_l2cr_formats[] = {
+	{ L2CR_L2E, 0, " disabled" },
+	{ L2CR_L2DO|L2CR_L2IO, L2CR_L2DO, " data-only" },
+	{ L2CR_L2DO|L2CR_L2IO, L2CR_L2IO, " instruction-only" },
+	{ L2CR_L2DO|L2CR_L2IO, L2CR_L2DO|L2CR_L2IO, " locked" },
+	{ 0, ~0, " 2MB" },
+	{ L2CR_L2WT, L2CR_L2WT, " WT" },
+	{ L2CR_L2WT, 0, " WB" },
+	{ L2CR_L2PE, L2CR_L2PE, " with ECC" },
+	{ 0, ~0, " L2 cache" },
+	{ 0, 0, NULL }
+};
+
 static const struct fmttab cpu_l2cr_formats[] = {
 	{ L2CR_L2E, 0, " disabled" },
 	{ L2CR_L2DO|L2CR_L2IO, L2CR_L2DO, " data-only" },
@@ -245,7 +258,7 @@ static const struct cputab models[] = {
 	{ "970FX",	IBM970FX,	REVFMT_MAJMIN },
 	{ "970MP",	IBM970MP,	REVFMT_MAJMIN },
 	{ "POWER3II",   IBMPOWER3II,    REVFMT_MAJMIN },
-	{ "Espresso",	IBM750ESPRESSO, REVFMT_MAJMIN },
+	{ "Espresso",	IBMESPRESSO,	REVFMT_MAJMIN },
 	{ "",		0,		REVFMT_HEX }
 };
 
@@ -428,9 +441,9 @@ cpu_probe_cache(void)
 
 	switch (vers) {
 #define	K	*1024
-	case IBM750ESPRESSO:
 	case IBM750FX:
 	case IBM750GX:
+	case IBMESPRESSO:
 	case MPC601:
 	case MPC750:
 	case MPC7400:
@@ -638,9 +651,9 @@ cpu_setup(device_t self, struct cpu_info *ci)
 		break;
 
 	case MPC750:
-	case IBM750ESPRESSO:
 	case IBM750FX:
 	case IBM750GX:
+	case IBMESPRESSO:
 		/* Select NAP mode. */
 		hid0 &= ~(HID0_DOZE | HID0_NAP | HID0_SLEEP);
 		hid0 |= HID0_NAP | HID0_DPM;
@@ -688,9 +701,9 @@ cpu_setup(device_t self, struct cpu_info *ci)
 
 #ifdef NAPMODE
 	switch (vers) {
-	case IBM750ESPRESSO:
 	case IBM750FX:
 	case IBM750GX:
+	case IBMESPRESSO:
 	case MPC750:
 	case MPC7400:
 		/* Select NAP mode. */
@@ -701,9 +714,9 @@ cpu_setup(device_t self, struct cpu_info *ci)
 #endif
 
 	switch (vers) {
-	case IBM750ESPRESSO:
 	case IBM750FX:
 	case IBM750GX:
+	case IBMESPRESSO:
 	case MPC750:
 		hid0 &= ~HID0_DBP;		/* XXX correct? */
 		hid0 |= HID0_EMCP | HID0_BTIC | HID0_SGE | HID0_BHT;
@@ -796,9 +809,9 @@ cpu_setup(device_t self, struct cpu_info *ci)
 	case MPC604e:
 	case MPC604ev:
 	case MPC750:
-	case IBM750ESPRESSO:
 	case IBM750FX:
 	case IBM750GX:
+	case IBMESPRESSO:
 	case MPC7400:
 	case MPC7410:
 	case MPC7447A:
@@ -816,9 +829,9 @@ cpu_setup(device_t self, struct cpu_info *ci)
 		case MPC7457: /* 7447 does not have L3! */
 			cpu_config_l3cr(vers);
 			break;
-		case IBM750ESPRESSO:
 		case IBM750FX:
 		case IBM750GX:
+		case IBMESPRESSO:
 		case MPC750:
 		case MPC7400:
 		case MPC7410:
@@ -946,7 +959,7 @@ cpu_identify(char *str, size_t len)
 	}
 
 	if (cp->name[0] != '\0') {
-		n = snprintf(str, len, "%s (Revision ", cp->name);
+		n = snprintf(str, len, "%s (rev ", cp->name);
 	} else {
 		n = snprintf(str, len, "Version %#x (Revision ", vers);
 	}
@@ -1097,7 +1110,6 @@ cpu_config_l2cr(int pvr)
 	aprint_normal(",");
 
 	switch (vers) {
-	case IBM750ESPRESSO:
 	case IBM750FX:
 	case IBM750GX:
 		cpu_fmttab_print(cpu_ibm750_l2cr_formats, l2cr);
@@ -1110,6 +1122,13 @@ cpu_config_l2cr(int pvr)
 			cpu_fmttab_print(cpu_ibm750cl_l2cr_formats, l2cr);
 		} else {
 			cpu_fmttab_print(cpu_l2cr_formats, l2cr);
+		}
+		break;
+	case IBMESPRESSO:
+		if (cpu_number() == 1) {
+			cpu_fmttab_print(cpu_espresso_2m_l2cr_formats, l2cr);
+		} else {
+			cpu_fmttab_print(cpu_ibm750_l2cr_formats, l2cr);
 		}
 		break;
 	case MPC7447A:
