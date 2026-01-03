@@ -43,6 +43,7 @@ __KERNEL_RCSID(0, "$NetBSD: hwaes.c,v 1.1 2025/11/11 21:34:48 jmcneill Exp $");
 #include <sys/systm.h>
 #include <sys/callout.h>
 #include <sys/buf.h>
+#include <sys/cpu.h>
 
 #include <machine/wii.h>
 #include <machine/wiiu.h>
@@ -121,7 +122,20 @@ hwaes_attach(device_t parent, device_t self, void *aux)
 {
 	struct ahb_attach_args *aaa = aux;
 	struct hwaes_softc *sc = device_private(self);
+	bool enabled;
 	int error;
+
+	/*
+	 * Since aes_md_init() expects per-CPU engines and we only have one,
+	 * only enable AES offload in single CPU configurations.
+	 */
+	enabled = kcpuset_countset(kcpuset_attached) == 1;
+
+	aprint_naive("\n");
+	aprint_normal(": AES engine%s\n", enabled ? "" : " (disabled)");
+	if (!enabled) {
+		return;
+	}
 
 	sc->sc_dev = self;
 	sc->sc_dmat = aaa->aaa_dmat;
@@ -129,12 +143,9 @@ hwaes_attach(device_t parent, device_t self, void *aux)
 	error = bus_space_map(sc->sc_bst, aaa->aaa_addr, AES_REG_SIZE,
 	    0, &sc->sc_bsh);
 	if (error != 0) {
-		aprint_error(": couldn't map registers (%d)\n", error);
+		aprint_error_dev(self, "couldn't map registers (%d)\n", error);
 		return;
 	}
-
-	aprint_naive("\n");
-	aprint_normal(": AES engine\n");
 
 	ahb_claim_device(self, IOPAESEN);
 
