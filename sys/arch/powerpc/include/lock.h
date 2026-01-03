@@ -116,7 +116,7 @@ __cpu_simple_lock_try(__cpu_simple_lock_t *alp)
 #ifdef IBM405_ERRATA77
 	"dcbt	0,%4		\n"
 #elif defined(__ESPRESSO__)
-	"dcbst	0,%1		\n"
+	"dcbst	0,%4		\n"
 #endif
 	"stwcx.	%3,0,%4		\n\
 	isync			\n\
