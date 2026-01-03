@@ -36,6 +36,7 @@ __KERNEL_RCSID(0, "$NetBSD: hwgpio.c,v 1.1 2024/01/23 21:48:12 jmcneill Exp $");
 #include <sys/kmem.h>
 #include <sys/bitops.h>
 #include <sys/gpio.h>
+#include <sys/mutex.h>
 
 #include <dev/gpio/gpiovar.h>
 
@@ -77,6 +78,7 @@ static gpio_pin_t hwgpio_pins[] = {
 
 struct hwgpio_softc {
 	struct gpio_chipset_tag	sc_gp;
+	kmutex_t sc_lock;
 };
 
 #define	RD4(reg)		in32(reg)
@@ -91,10 +93,10 @@ hwgpio_pin_read(void *priv, int pin)
 static void
 hwgpio_pin_write(void *priv, int pin, int value)
 {
+	struct hwgpio_softc * const sc = priv;
 	uint32_t out;
-	int s;
 
-	s = splhigh();
+	mutex_enter(&sc->sc_lock);
 	out = RD4(HW_GPIOB_OUT);
 	if (value) {
 		out |= __BIT(pin);
@@ -102,16 +104,16 @@ hwgpio_pin_write(void *priv, int pin, int value)
 		out &= ~__BIT(pin);
 	}
 	WR4(HW_GPIOB_OUT, out);
-	splx(s);
+	mutex_exit(&sc->sc_lock);
 }
 
 static void
 hwgpio_pin_ctl(void *priv, int pin, int flags)
 {
+	struct hwgpio_softc * const sc = priv;
 	uint32_t dir;
-	int s;
 
-	s = splhigh();
+	mutex_enter(&sc->sc_lock);
 	dir = RD4(HW_GPIOB_DIR);
 	if (flags & GPIO_PIN_OUTPUT) {
 		dir |= __BIT(pin);
@@ -119,7 +121,7 @@ hwgpio_pin_ctl(void *priv, int pin, int flags)
 		dir &= ~__BIT(pin);
 	}
 	WR4(HW_GPIOB_DIR, dir);
-	splx(s);
+	mutex_exit(&sc->sc_lock);
 }
 
 static int
@@ -136,6 +138,8 @@ hwgpio_attach(device_t parent, device_t self, void *aux)
 	struct gpiobus_attach_args gba = {};
 	uint32_t in, out, dir;
 	u_int n;
+
+	mutex_init(&sc->sc_lock, MUTEX_DEFAULT, IPL_HIGH);
 
 	gp->gp_cookie = sc;
 	gp->gp_pin_read = hwgpio_pin_read;
