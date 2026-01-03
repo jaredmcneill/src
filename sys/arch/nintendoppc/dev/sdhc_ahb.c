@@ -78,14 +78,11 @@ sdhc_ahb_attach(device_t parent, device_t self, void *aux)
 	sc->sc_base.sc_host = sc->sc_host;
 	sc->sc_base.sc_dmat = &wii_mem2_bus_dma_tag;
 	sc->sc_base.sc_flags = SDHC_FLAG_SINGLE_POWER_WRITE |
-			       SDHC_FLAG_32BIT_ACCESS |
-			       SDHC_FLAG_USE_DMA;
+			       SDHC_FLAG_32BIT_ACCESS;
 	if (wiiu_plat) {
 		sc->sc_base.sc_flags |= SDHC_FLAG_NO_PWR0;
-		if (aaa->aaa_irq == 8) {
-			/* DMA seems to have trouble with SDIO on Wii U. */
-			sc->sc_base.sc_flags &= ~SDHC_FLAG_USE_DMA;
-		}
+	} else {
+		sc->sc_base.sc_flags |= SDHC_FLAG_USE_DMA;
 	}
 
 	bst = aaa->aaa_bst;
