@@ -833,9 +833,6 @@ cpu_setup(device_t self, struct cpu_info *ci)
 		spr = mfspr(SPR_IBMESPRESSO_HID5);
 		mtspr(SPR_IBMESPRESSO_HID5, spr | 0x67fdc000);
 
-		spr = mfspr(SPR_IBMESPRESSO_HID2);
-		aprint_normal_dev(self, "HID2 0x%08lx\n", spr);
-
 		spr = mfspr(SPR_IBMESPRESSO_HID4);
 		snprintb(hidbuf, sizeof hidbuf, IBM750CL_HID4_BITMASK, spr);
 		aprint_normal_dev(self, "HID4 %s\n", hidbuf);
