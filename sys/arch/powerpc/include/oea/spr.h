@@ -133,6 +133,7 @@
 #define	SPR_DBAT6L		0x23d	/* ..6. Data BAT Reg 6 Lower */
 #define	SPR_DBAT7U		0x23e	/* ..6. Data BAT Reg 7 Upper */
 #define	SPR_DBAT7L		0x23f	/* ..6. Data BAT Reg 7 Upper */
+#define SPR_IBMESPRESSO_HID2	0x398	/* ..6. Espresso HID2 */
 #define	SPR_UMMCR2		0x3a0	/* ..6. User Monitor Mode Control Register 2 */
 #define	SPR_UMMCR0		0x3a8	/* ..6. User Monitor Mode Control Register 0 */
 #define	SPR_USIA		0x3ab	/* ..6. User Sampled Instruction Address */
@@ -140,8 +141,16 @@
 #define	SPR_MMCR2		0x3b0	/* ..6. Monitor Mode Control Register 2 */
 #define	 SPR_MMCR2_THRESHMULT_32  0x80000000 /* Multiply MMCR0 threshold by 32 */
 #define	 SPR_MMCR2_THRESHMULT_2	  0x00000000 /* Multiply MMCR0 threshold by 2 */
+#define SPR_IBMESPRESSO_HID5	0x3b0	/* ..6. Espresso HID5 */
+#define   HID5_H5A		  0x80000000 /* Enable HID5 */
+#define   HID5_PIRE		  0x40000000 /* Enable PIR */
 #define	SPR_PMC5		0x3b1	/* ..6. Performance Counter Register 5 */
 #define	SPR_PMC6		0x3b2	/* ..6. Performance Counter Register 6 */
+#define SPR_SCR			0x3b3	/* ..6. Espresso SCR */
+#define   SPR_SCR_IPI_PEND(cpunum) (1U << (20 - (cpunum)))
+#define   SPR_SCR_WAKE(cpunum)     (1U << (23 - (cpunum)))
+#define SPR_CAR			0x3b4	/* ..6. Espresso CAR */
+#define SPR_BCR			0x3b5	/* ..6. Espresso BCR */
 
 #define	SPR_MMCR0		0x3b8	/* ..6. Monitor Mode Control Register 0 */
 #define	  MMCR0_FC		  0x80000000 /* Freeze counters */
@@ -187,6 +196,16 @@
  0 */
 #define SPR_HID1		0x3f1	/* E.68 Hardware Implementation Register
  1 */
+#define SPR_IBMESPRESSO_HID4	0x3f3   /* ..6. Espresso HID4 */
+#define   HID4_H4A		  0x80000000 /* Must be written as 1 */
+#define   HID4_L2FM_64B		  0x20000000 /* L2 fetch mode - 64B-fetch */
+#define   HID4_BPD_4		  0x10000000 /* Bus pipeline depth - 4 */
+#define   HID4_SBE		  0x02000000 /* Secondary BAT enable */
+#define   HID4_ST0		  0x01000000 /* Store 0 enable */
+#define   HID4_LPE		  0x00800000 /* Little endian and pair-singles exception mode */
+#define   HID4_DBP		  0x00400000 /* Data bus parking */
+#define   HID4_L2MUM		  0x00200000 /* L2 MUM enable */
+#define   HID4_L2_CCFI		  0x00100000 /* L2 complete castout prior to L2 flash invalidate */
 #define SPR_HID4		0x3f4   /* ..6. 970 HID4 */
 #define SPR_HID5		0x3f6   /* ..6. 970 HID5 */
 #define	SPR_DABR		0x3f5	/* ..6. Data Address Breakpoint Register */

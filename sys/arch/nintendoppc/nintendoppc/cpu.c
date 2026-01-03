@@ -40,6 +40,7 @@ __KERNEL_RCSID(0, "$NetBSD$");
 #include <machine/wii.h>
 #include <machine/wiiu.h>
 #include <powerpc/include/spr.h>
+#include <powerpc/include/oea/spr.h>
 #include <powerpc/include/psl.h>
 #include <arch/nintendoppc/dev/mainbus.h>
 #include <arch/nintendoppc/nintendoppc/pic_pi.h>
@@ -104,7 +105,18 @@ cpu_attach(device_t parent, device_t self, void *aux)
 	if (cpu_num > 0) {
 		cpu_spinup(self, ci);
 	}
+
+	if (wiiu_native) {
+		/*
+		 * All cores are the same speed, but cores 1 has a bigger
+		 * cache, so let the scheduler know that the other cores
+		 * are slower.
+		 */
+		cpu_topology_setspeed(ci, cpu_index(ci) != 1);
+	}
 #endif
+
+	ci->ci_data.cpu_cc_freq = cpu_timebase;
 }
 
 #ifdef MULTIPROCESSOR

@@ -43,6 +43,7 @@ __KERNEL_RCSID(0, "$NetBSD: pic_pi.c,v 1.4 2025/03/13 18:41:34 jmcneill Exp $");
 #include <sys/bitops.h>
 #include <sys/cpu.h>
 #include <powerpc/include/spr.h>
+#include <powerpc/include/oea/spr.h>
 #include <machine/pio.h>
 #include <machine/intr.h>
 #include <arch/powerpc/pic/picvar.h>
@@ -100,6 +101,17 @@ pi_disable_irq(struct pic_ops *pic, int irq)
 	WR4(pic_s[cpu_num].intmr, pic_s[cpu_num].irqmask & ~pic_s[cpu_num].actmask);
 }
 
+#ifdef MULTIPROCESSOR
+static void
+pi_ipi_ack(const u_int cpu_num, register_t spr)
+{
+	do {
+		mtspr(SPR_SCR, spr & ~SPR_SCR_IPI_PEND(cpu_num));
+		spr = mfspr(SPR_SCR);
+	} while ((spr & SPR_SCR_IPI_PEND(cpu_num)) != 0);
+}
+#endif
+
 static int
 pi_get_irq(struct pic_ops *pic, int mode)
 {
@@ -109,10 +121,10 @@ pi_get_irq(struct pic_ops *pic, int mode)
 
 #ifdef MULTIPROCESSOR
 	if (wiiu_native) {
-		uint32_t spr = mfspr(SPR_SCR);
+		register_t spr = mfspr(SPR_SCR);
 
 		if ((spr & SPR_SCR_IPI_PEND(cpu_num)) != 0) {
-			mtspr(SPR_SCR, spr & ~SPR_SCR_IPI_PEND(cpu_num));
+			pi_ipi_ack(cpu_num, spr);
 			return WIIU_PI_IRQ_MB_CPU(cpu_num);
 		}
 	}

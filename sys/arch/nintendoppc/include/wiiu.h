@@ -83,11 +83,6 @@
 /* GPIOs */
 #define WIIU_GPIO_POWER			0
 
-/* Espresso SPRs. */
-#define SPR_SCR				0x3B3
-#define  SPR_SCR_IPI_PEND(cpunum)	__BIT(20 - (cpunum))
-#define  SPR_SCR_WAKE(cpunum)		__BIT(23 - (cpunum))
-
 /* Boot vector */
 #define WIIU_BOOT_VECTOR		0x08100100
 

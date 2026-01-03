@@ -134,26 +134,7 @@ __KERNEL_RCSID(0, "$NetBSD: machdep.c,v 1.12 2025/11/15 17:59:23 jmcneill Exp $"
 #define WII_DEFAULT_CMDLINE "root=ld0a"
 #endif
 
-#define  HID0_DPM		0x00100000	/* Dynamic power management */
-#define  HID0_NHR		0x00010000	/* Not hard reset */
-#define  HID0_ICE		0x00008000	/* Instruction cache enable */
-#define  HID0_DCE		0x00004000	/* Data cache enable */
-#define  HID0_BTIC		0x00000020	/* BTI cache enable */
-#define  HID0_BHT		0x00000004	/* Branch history table enable */
-
 #define IBM750CL_SPR_HID4	1011
-#define  HID4_L2FM_64B		0x20000000	/* L2 fetch mode - 64B-fetch */
-#define  HID4_BPD_4		0x10000000	/* Bus pipeline depth - 4 */
-#define  HID4_ST0		0x01000000	/* Store 0 enable */
-#define  HID4_DBP		0x00400000	/* Data bus parking */
-#define	 HID4_L2_CCFI		0x00100000	/* L2 complete castout prior
-						 * to L2 flash invalidate.
-						 */
-
-#define IBMESPRESSO_SPR_HID5	944
-#define  HID5_H5A		0x80000000	/* Enable HID5 */
-#define  HID5_PIRE		0x40000000	/* Enable PIR */
-#define IBMESPRESSO_SPR_CAR	948
 
 #define MINI_MEM2_START		0x13f00000	/* Start of reserved MEM2 for MINI */
 
@@ -363,7 +344,8 @@ wiiu_init_memmap(u_int endkernel)
 	availmemr[1].start = 0x10420000;
 	availmemr[1].size  = 0x17500000 - availmemr[1].start;
 	availmemr[2].start = 0x17a80000;
-	availmemr[2].size  = 0x80000000 - availmemr[2].start;
+	availmemr[2].size  = physmemr[2].start + physmemr[2].size -
+			     availmemr[2].start;
 
 	availmemr[3].size  = 0;
 }
@@ -396,38 +378,33 @@ initppc(u_int startkernel, u_int endkernel, u_int args, void *btinfo)
 	boothowto = BOOTHOWTO;
 #endif
 
-	spr = mfspr(IBM750CL_SPR_HID4);
-	/*
-	 * HID4[L2_CCFI] must be set to 1 for correct operation of L2 cache.
-	 * HID4[DBP] must be set to 1 to support multiple bus masters.
-	 */
-	spr |= HID4_L2_CCFI;
-	spr |= HID4_DBP;
-	if (wiiu_native) {
-		spr |= HID4_L2FM_64B;
-		spr |= HID4_BPD_4;
-		spr |= HID4_ST0;
+	cpu_model_init();
+
+	if (!wiiu_native) {
+		spr = mfspr(IBM750CL_SPR_HID4);
+		spr |= HID4_L2_CCFI;
+		spr |= HID4_DBP;
+		mtspr(IBM750CL_SPR_HID4, spr);
+		asm volatile ("isync");
 	}
-	mtspr(IBM750CL_SPR_HID4, spr);
-	asm volatile ("isync");
 
 	if (wiiu_native) {
-		spr = mfspr(IBMESPRESSO_SPR_HID5);
-		mtspr(IBMESPRESSO_SPR_HID5, spr | HID5_H5A | HID5_PIRE);
+		spr = mfspr(SPR_IBMESPRESSO_HID5);
+		mtspr(SPR_IBMESPRESSO_HID5, spr | HID5_H5A | HID5_PIRE);
 
-		mtspr(SPR_HID0, HID0_DPM | HID0_NHR | HID0_ICE | HID0_DCE |
-				HID0_BTIC | HID0_BHT);
+		spr = mfspr(SPR_SCR);
+		mtspr(SPR_SCR, (spr & ~0x40000000) | 0x80000000);
 
-		/* Espresso magic */
-		mtspr(IBMESPRESSO_SPR_CAR,
-		    mfspr(IBMESPRESSO_SPR_CAR) | 0xfc100000);
-		mtspr(IBMESPRESSO_SPR_HID5,
-		    mfspr(IBMESPRESSO_SPR_HID5) | 0x67fdc000);
+		spr = mfspr(SPR_CAR);
+		mtspr(SPR_CAR, spr | 0xfc100000);
+
+		mtspr(SPR_BCR, 0x08000000);
+
 		asm volatile ("isync");
 	}
 
 	/* Configure L2 cache */
-	l2cr_config = L2CR_L2E | L2CR_L2PE;
+	l2cr_config = L2CR_L2E;
 
 	if (bus_space_init(&wii_mem_tag, NULL,
 			   ex_storage[0], sizeof(ex_storage[0]))) {
@@ -557,6 +534,11 @@ cpu_reboot(int howto, char *what)
 	doshutdownhooks();
 
 	disable_intr();
+
+#ifdef MULTIPROCESSOR
+	cpu_halt_others();
+	delay(100000);
+#endif
 
 	/* Force halt on panic to capture the cause on screen. */
 	if (panicstr != NULL) {

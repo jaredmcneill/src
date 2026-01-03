@@ -128,7 +128,7 @@
 	/*
 	 * We need to setup BAT0 as in mmu_oea.c.
 	 */
-	li	%r11, BATU(0x00000000, BAT_BL_256M, BAT_Vs)
+	li	%r11, BATU(0x00000000, BAT_BL_32M, BAT_Vs)
 	li	%r12, BATL(0x00000000, BAT_M, BAT_PP_RW)
 	mtdbatu	0, %r11
 	mtdbatl	0, %r12
@@ -139,9 +139,9 @@
 	/*
 	 * Use BAT1 to access MEM2.
 	 */
-	/* BATU(0x10000000, BAT_BL_2G, BAT_Vs) */
+	/* BATU(0x10000000, BAT_BL_256M, BAT_Vs) */
 	lis	%r11, 0x1000
-	ori	%r11, %r11, BAT_BL_2G|BAT_Vs
+	ori	%r11, %r11, BAT_BL_256M|BAT_Vs
 	/* BATL(0x10000000, BAT_M, BAT_PP_RW) */
 	lis	%r12, 0x1000
 	ori	%r12, %r12, BAT_M|BAT_PP_RW

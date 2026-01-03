@@ -92,7 +92,7 @@ mainbus_attach(device_t parent, device_t self, void *aux)
 
 	maxcpu = wiiu_native ? 3 : 1;
 
-	for (n = 0; n < maxcpu; n++) {
+	for (n = 0; n < uimin(maxcpu, CPU_MAXNUM); n++) {
 		maa.maa_name = "cpu";
 		maa.maa_addr = MAINBUSCF_ADDR_DEFAULT;
 		maa.maa_irq = MAINBUSCF_IRQ_DEFAULT;

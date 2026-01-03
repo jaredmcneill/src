@@ -41,6 +41,7 @@ __KERNEL_RCSID(0, "$NetBSD$");
 #include <sys/cpu.h>
 #include <powerpc/pic/ipivar.h>
 #include <powerpc/include/spr.h>
+#include <powerpc/include/oea/spr.h>
 #include <machine/pio.h>
 #include <machine/wiiu.h>
 #include "ipi_latte.h"
