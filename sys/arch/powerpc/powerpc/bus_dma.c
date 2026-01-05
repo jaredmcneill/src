@@ -185,6 +185,7 @@ _bus_dmamap_load_buffer(bus_dma_tag_t t, bus_dmamap_t map, void *buf, bus_size_t
 		 */
 		if (map->_dm_bounce_thresh_min != 0 &&
 		    curaddr < map->_dm_bounce_thresh_min)
+			return (EINVAL);
 		if (map->_dm_bounce_thresh_max != 0 &&
 		    curaddr >= map->_dm_bounce_thresh_max)
 			return (EINVAL);
@@ -326,6 +327,20 @@ _bus_dmamap_load_mbuf(bus_dma_tag_t t, bus_dmamap_t map, struct mbuf *m0, int fl
 			lastaddr = m->m_ext.ext_paddr +
 			    (m->m_data - m->m_ext.ext_buf);
  have_addr:
+			/*
+			 * If we're beyond the bounce threshold, notify
+			 * the caller.
+			 */
+			if (map->_dm_bounce_thresh_min != 0 &&
+			    lastaddr < map->_dm_bounce_thresh_min) {
+				error = EINVAL;
+				continue;
+			}
+			if (map->_dm_bounce_thresh_max != 0 &&
+			    lastaddr >= map->_dm_bounce_thresh_max) {
+				error = EINVAL;
+				continue;
+			}
 			if (first == 0 && ++seg >= map->_dm_segcnt) {
 				error = EFBIG;
 				continue;
