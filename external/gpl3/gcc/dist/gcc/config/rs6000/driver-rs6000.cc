@@ -508,7 +508,6 @@ static const struct asm_name asm_names[] = {
   { "630",	"-mppc64" },
   { "740",	"-mppc" },
   { "750",	"-mppc" },
-  { "espresso", "-mppc" },
   { "G3",	"-mppc" },
   { "7400",	"-mppc %{!mvsx:%{!maltivec:-maltivec}}" },
   { "7450",	"-mppc %{!mvsx:%{!maltivec:-maltivec}}" },

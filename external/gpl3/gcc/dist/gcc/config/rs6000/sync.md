@@ -347,13 +347,6 @@
   "<stcx> %2,%y1"
   [(set_attr "type" "store_c")])
 
-;; I am pretty sure VOID is correct since this actually affects a cache-block sized
-;; chunk of memory
-(define_insn "rs6000_dcbst"
-  [(match_operand:VOID 0 "memory_operand" "=Z")]
-  ""
-  "dcbst %y0")
-
 ;; Use a temporary register to force getting an even register for the
 ;; lqarx/stqcrx. instructions.  Normal optimizations will eliminate this extra
 ;; copy on big endian systems.

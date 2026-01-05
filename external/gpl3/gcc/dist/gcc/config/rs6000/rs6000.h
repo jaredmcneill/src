@@ -77,9 +77,6 @@
 #define PPC405_ERRATUM77 0
 #endif
 
-/* Support Espresso stwcx erratum. */
-#define ESPRESSO_ERRATUM (rs6000_cpu == PROCESSOR_ESPRESSO)
-
 #ifndef SUBTARGET_DRIVER_SELF_SPECS
 # define SUBTARGET_DRIVER_SELF_SPECS ""
 #endif
@@ -147,7 +144,6 @@
   mcpu=630: -mppc64; \
   mcpu=740: -mppc; \
   mcpu=750: -mppc; \
-  mcpu=espresso: -mppc; \
   mcpu=G3: -mppc; \
   mcpu=7400: -mppc %{!mvsx:%{!maltivec:-maltivec}}; \
   mcpu=7450: -mppc %{!mvsx:%{!maltivec:-maltivec}}; \
