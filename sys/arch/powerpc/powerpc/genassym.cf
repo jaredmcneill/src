@@ -152,6 +152,7 @@ define	PCB_USPRG0	offsetof(struct pcb, pcb_usprg0)
 
 define	L_CPU		offsetof(struct lwp, l_cpu)
 define	L_MD_ASTPENDING	offsetof(struct lwp, l_md.md_astpending)
+define	L_MD_FASTRET	offsetof(struct lwp, l_md.md_fastret)
 define	L_MD_UTF	offsetof(struct lwp, l_md.md_utf)
 define	L_PCB		offsetof(struct lwp, l_addr)
 define	L_PROC		offsetof(struct lwp, l_proc)

@@ -71,6 +71,9 @@ __KERNEL_RCSID(0, "$NetBSD: trap.c,v 1.167 2025/12/21 07:00:28 skrll Exp $");
 
 static int emulate_privileged(struct lwp *, struct trapframe *);
 static int fix_unaligned(struct lwp *, struct trapframe *);
+#ifdef __ESPRESSO__
+static int fix_stwcx(struct lwp *, struct trapframe *);
+#endif
 static inline vaddr_t setusr(vaddr_t, size_t *);
 static inline void unsetusr(void);
 
@@ -437,8 +440,19 @@ vm_signal:
 					break;
 				}
 				ksi.ksi_code = ILL_PRVOPC;
-			} else
+			} else {
+#ifdef __ESPRESSO__
+				if (fix_stwcx(l, tf)) {
+					tf->tf_srr0 += 4;
+					tf->tf_srr1 &=
+					    (PSL_USERSRR1|PSL_FP|PSL_VEC);
+					/* Fast return */
+					l->l_md.md_fastret = 1;
+					return;
+				}
+#endif
 				ksi.ksi_code = ILL_ILLOPC;
+			}
 			if (cpu_printfataltraps
 			    && (p->p_slflag & PSL_TRACED) == 0
 			    && !sigismember(&p->p_sigctx.ps_sigcatch,
@@ -1285,3 +1299,53 @@ get_dsi_info(register_t dsisr)
     }
     return 0;
 }
+
+#ifdef __ESPRESSO__
+static int
+fix_stwcx(struct lwp *l, struct trapframe *tf)
+{
+	struct faultbuf env;
+	union instr instr;
+	vaddr_t uva, p;
+	size_t len;
+	uint32_t cr;
+
+	if (copyin((void *)tf->tf_srr0, &instr.i_int, sizeof(instr)) != 0) {
+		return 0;
+	}
+
+	if (instr.i_any.i_opcd != OPC_integer_31 ||
+	    instr.i_x.i_xo != OPC31_STWCX) {
+		return 0;
+	}
+	KASSERT(instr.i_x.i_rc == 0);
+
+	if (setfault(&env) != 0) {
+		unsetusr();
+		curpcb->pcb_onfault = 0;
+		printf("trap: stwcx. emulate failed\n");
+		return 0;
+	}
+
+	uva = (instr.i_x.i_ra ? tf->tf_ureg.r_fixreg[instr.i_x.i_ra] : 0) +
+	      tf->tf_ureg.r_fixreg[instr.i_x.i_rb];
+	p = setusr(uva, &len);
+
+	asm volatile(
+	    "dcbst	0, %1		\n"
+	    "stwcx.	%2, 0, %1	\n"
+	    "mfcr	%0		\n"
+	    : "=r" (cr)
+	    : "r" (p),
+	      "r" (tf->tf_ureg.r_fixreg[instr.i_x.i_rs])
+	    : "cr0", "memory"
+	);
+
+	tf->tf_ureg.r_cr &= ~0xf0000000;
+	tf->tf_ureg.r_cr |= (cr & 0xf0000000);
+
+	unsetusr();
+	curpcb->pcb_onfault = 0;
+	return 1;
+}
+#endif

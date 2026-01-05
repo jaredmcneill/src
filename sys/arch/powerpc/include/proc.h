@@ -45,6 +45,7 @@
 struct mdlwp {
 	volatile int md_flags;
 	volatile int md_astpending;
+	volatile int md_fastret;
 	struct trapframe *md_utf;		/* user trampframe */
 };
 
