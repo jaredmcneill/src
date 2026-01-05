@@ -2,8 +2,8 @@
 
 RAMDISKDIR!=	cd ${NETBSDSRCDIR}/distrib/${THISPPC:T}/ramdisk && ${PRINTOBJDIR}
 
-CFLAGS+=-mcpu=espresso
-AFLAGS+=-mcpu=espresso
+CFLAGS+=-mcpu=750
+AFLAGS+=-mcpu=750
 
 .ifndef TEXTADDR
 BEGIN:

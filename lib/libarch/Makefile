@@ -3,7 +3,7 @@
 .include <bsd.own.mk>
 
 # These should always be a MACHINE_CPU value
-ARCHDIRS= alpha arm i386 m68k sparc x86_64
+ARCHDIRS= alpha arm i386 m68k powerpc sparc x86_64
 
 .for arch in ${ARCHDIRS}
 .include "${.CURDIR}/${arch}/Makefile.inc"

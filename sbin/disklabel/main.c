@@ -340,7 +340,6 @@ static const struct arch_endian {
 	{ BIG_ENDIAN, "mips64eb" },
 	{ BIG_ENDIAN, "or1k" },
 	{ BIG_ENDIAN, "powerpc" },
-	{ BIG_ENDIAN, "powerpc-espresso" },
 	{ BIG_ENDIAN, "sh3eb" },
 	{ BIG_ENDIAN, "sparc" },
 	{ BIG_ENDIAN, "sparc64" },

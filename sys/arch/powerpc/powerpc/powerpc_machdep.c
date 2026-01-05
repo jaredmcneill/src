@@ -313,6 +313,13 @@ SYSCTL_SETUP(sysctl_machdep_setup, "sysctl machdep subtree setup")
 #endif
 		       NULL, 0,
 		       CTL_MACHDEP, CPU_NO_UNALIGNED, CTL_EOL);
+	sysctl_createv(clog, 0, NULL, NULL,
+		       CTLFLAG_PERMANENT|CTLFLAG_IMMEDIATE,
+		       CTLTYPE_INT, "pvr", NULL,
+		       NULL,
+		       mfpvr(),
+		       NULL, 0,
+		       CTL_MACHDEP, CPU_PVR, CTL_EOL);
 }
 
 /*

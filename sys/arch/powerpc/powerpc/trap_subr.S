@@ -1016,7 +1016,7 @@ trapexit:
 	b	trapagain
 
 trapleave:
-#ifdef __ESPRESSO__
+#ifdef PPC_IBMESPRESSO
 /* Test fast return pending: */
 	ldint	%r4,L_MD_FASTRET(%r13)
 	andi.	%r4,%r4,1
@@ -1028,7 +1028,7 @@ intrleave:
 	FRAME_LEAVE(CI_TEMPSAVE)
 	RFI
 
-#ifdef __ESPRESSO__
+#ifdef PPC_IBMESPRESSO
 trapleave_noclear:
 	FRAME_RESTORE_CALLEE
 	FRAME_LEAVE(CI_TEMPSAVE)

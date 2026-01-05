@@ -510,5 +510,6 @@ void	__syncicache(void *, size_t);
 #define	CPU_EXECPROT		11	/* bool: PROT_EXEC works */
 #define	CPU_FPU			12
 #define	CPU_NO_UNALIGNED	13	/* No HW support for unaligned access */
+#define	CPU_PVR			14	/* int: processor version */
 
 #endif	/* _POWERPC_CPU_H_ */

@@ -43,7 +43,6 @@ __KERNEL_RCSID(0, "$NetBSD: mainbus.c,v 1.6 2025/12/08 23:00:22 jmcneill Exp $")
 #include <arch/nintendoppc/dev/mainbus.h>
 
 #include "locators.h"
-#include "mainbus.h"
 
 extern struct powerpc_bus_space wii_mem_tag;
 extern struct powerpc_bus_dma_tag wii_bus_dma_tag;

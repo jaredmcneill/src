@@ -14,7 +14,7 @@ MAKECONF?=	/etc/mk.conf
 #
 # CPU model, derived from MACHINE_ARCH
 #
-MACHINE_CPU=	${MACHINE_ARCH:C/mips.*e[bl]/mips/:C/sh3e[bl]/sh3/:S/coldfire/m68k/:S/m68000/m68k/:S/m68ksf/m68k/:C/e?arm.*/arm/:C/powerpc.*/powerpc/:S/aarch64eb/aarch64/:S/or1knd/or1k/:C/riscv../riscv/}
+MACHINE_CPU=	${MACHINE_ARCH:C/mips.*e[bl]/mips/:C/sh3e[bl]/sh3/:S/coldfire/m68k/:S/m68000/m68k/:S/m68ksf/m68k/:C/e?arm.*/arm/:S/powerpc64/powerpc/:S/aarch64eb/aarch64/:S/or1knd/or1k/:C/riscv../riscv/}
 
 .if (${MACHINE_ARCH} == "mips64el" || \
      ${MACHINE_ARCH} == "mips64eb" || \
@@ -38,21 +38,6 @@ LIBEXEC_MACHINE_ARCH=m68k
 LIBEXECINFO_MACHINE_ARCH=m68k
 LIBKERN_ARCH=m68k
 LDELFSO_MACHINE_ARCH=m68k
-.endif
-
-.if ${MACHINE_ARCH} == "powerpc-espresso"
-BFD_MACHINE_ARCH=powerpc
-BINUTILS_MACHINE_ARCH=powerpc
-GCC_MACHINE_ARCH=powerpc
-GDB_MACHINE_ARCH=powerpc
-GMP_MACHINE_ARCH=powerpc
-GOMP_MACHINE_ARCH=powerpc
-LIBGCC_MACHINE_ARCH=powerpc
-LIBC_MACHINE_ARCH=powerpc
-LIBEXEC_MACHINE_ARCH=powerpc
-LIBEXECINFO_MACHINE_ARCH=powerpc
-LIBKERN_ARCH=powerpc
-LDELFSO_MACHINE_ARCH=powerpc
 .endif
 
 #
@@ -246,7 +231,6 @@ _LIBC_COMPILER_RT.aarch64=	yes
 _LIBC_COMPILER_RT.aarch64eb=	yes
 _LIBC_COMPILER_RT.i386=		yes
 _LIBC_COMPILER_RT.powerpc=	yes
-_LIBC_COMPILER_RT.powerpc-espresso=yes
 _LIBC_COMPILER_RT.powerpc64=	yes
 _LIBC_COMPILER_RT.sparc=	yes
 _LIBC_COMPILER_RT.sparc64=	yes
@@ -1042,12 +1026,9 @@ GNU_ARCH.earmv7hf=armv7
 GNU_ARCH.earmv7eb=armv7eb
 GNU_ARCH.earmv7hfeb=armv7eb
 GNU_ARCH.i386=i486
-GCC_ARCH.powerpc-espresso=powerpc
 GCC_CONFIG_ARCH.i386=i486
-GCC_CONFIG_CPU.powerpc-espresso=espresso
 GCC_CONFIG_TUNE.i386=nocona
 GCC_CONFIG_TUNE.x86_64=nocona
-GCC_CONFIG_TUNE.powerpc-espresso=espresso
 GNU_ARCH.m68000=m68010
 GNU_ARCH.m68ksf=m68k
 GNU_ARCH.sh3eb=sh
@@ -1716,7 +1697,6 @@ _NEEDS_LIBCXX.aarch64=		yes
 _NEEDS_LIBCXX.aarch64eb=	yes
 _NEEDS_LIBCXX.i386=		yes
 _NEEDS_LIBCXX.powerpc=		yes
-_NEEDS_LIBCXX.powerpc-espresso=	yes
 _NEEDS_LIBCXX.powerpc64=	yes
 _NEEDS_LIBCXX.sparc=		yes
 _NEEDS_LIBCXX.sparc64=		yes

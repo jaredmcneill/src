@@ -71,7 +71,7 @@ __KERNEL_RCSID(0, "$NetBSD: trap.c,v 1.167 2025/12/21 07:00:28 skrll Exp $");
 
 static int emulate_privileged(struct lwp *, struct trapframe *);
 static int fix_unaligned(struct lwp *, struct trapframe *);
-#ifdef __ESPRESSO__
+#ifdef PPC_IBMESPRESSO
 static int fix_stwcx(struct lwp *, struct trapframe *);
 #endif
 static inline vaddr_t setusr(vaddr_t, size_t *);
@@ -441,7 +441,7 @@ vm_signal:
 				}
 				ksi.ksi_code = ILL_PRVOPC;
 			} else {
-#ifdef __ESPRESSO__
+#ifdef PPC_IBMESPRESSO
 				if (fix_stwcx(l, tf)) {
 					tf->tf_srr0 += 4;
 					tf->tf_srr1 &=
@@ -1300,7 +1300,7 @@ get_dsi_info(register_t dsisr)
     return 0;
 }
 
-#ifdef __ESPRESSO__
+#ifdef PPC_IBMESPRESSO
 static int
 fix_stwcx(struct lwp *l, struct trapframe *tf)
 {

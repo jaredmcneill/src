@@ -57,11 +57,7 @@
 # ifndef MACHINE
 #  define	MACHINE		"powerpc"
 # endif
-# ifdef __ESPRESSO__
-#  define	MACHINE_ARCH	"powerpc-espresso"
-# else
-#  define	MACHINE_ARCH	"powerpc"
-# endif
+# define	MACHINE_ARCH	"powerpc"
 # define	MID_MACHINE	MID_POWERPC
 #endif
 

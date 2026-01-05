@@ -444,7 +444,7 @@ y:	.quad	.##y,.TOC.@tocbase,0;	\
 .endm
 #endif /* _LOCORE */
 
-#if defined(__ESPRESSO__)
+#if defined(PPC_IBMESPRESSO)
 /*
  * Workaround for IBM Espresso erratum.
  */

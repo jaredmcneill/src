@@ -19,7 +19,7 @@ LIB=	gomp
 .include "${.CURDIR}/defs.mk"
 SRCS=	${G_libgomp_la_SOURCES}
 
-GOMP_MACHINE_ARCH?=	${MACHINE_ARCH:S/earmv5/earm/:S/powerpc-espresso/powerpc/}
+GOMP_MACHINE_ARCH?=	${MACHINE_ARCH:S/earmv5/earm/}
 ARCHDIR=		${.CURDIR}/arch/${GOMP_MACHINE_ARCH}
 
 CPPFLAGS+= \
@@ -36,7 +36,7 @@ SHLIB_MINOR=	3
 
 LDFLAGS+=	-Wl,--version-script,${DIST}/libgomp/libgomp.map
 
-.if ${GOMP_MACHINE_ARCH} == ${MACHINE_ARCH:S/earmv5/earm/:S/powerpc-espresso/powerpc/}
+.if ${GOMP_MACHINE_ARCH} == ${MACHINE_ARCH:S/earmv5/earm/}
 # This is where GCC looks for it.
 FILES=		libgomp.spec
 FILESDIR=	${LIBDIR}

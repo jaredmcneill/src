@@ -130,7 +130,8 @@ BUILD_VDPAU=1
 
 .if ${MACHINE_ARCH} == "i386" || \
     ${MACHINE_ARCH} == "x86_64" || \
-    ${MACHINE_CPU} == "powerpc" || \
+    ${MACHINE_ARCH} == "powerpc" || \
+    ${MACHINE_ARCH} == "powerpc64" || \
     !empty(MACHINE_ARCH:Maarch64*) || \
     !empty(MACHINE_ARCH:Mmips*) || \
     !empty(MACHINE_ARCH:Mearm*) || \
