@@ -4788,7 +4788,6 @@
 ./usr/share/man/cat8/news68k			base-man-share
 ./usr/share/man/cat8/newsmips			base-man-share
 ./usr/share/man/cat8/next68k			base-man-share
-./usr/share/man/cat8/nintendoppc		base-man-share
 ./usr/share/man/cat8/ofppc			base-man-share
 ./usr/share/man/cat8/pc532			base-obsolete		obsolete
 ./usr/share/man/cat8/playstation2		base-man-share
@@ -4919,7 +4918,6 @@
 ./usr/share/man/html8/news68k			base-man-share
 ./usr/share/man/html8/newsmips			base-man-share
 ./usr/share/man/html8/next68k			base-man-share
-./usr/share/man/html8/nintendoppc		base-man-share
 ./usr/share/man/html8/ofppc			base-man-share
 ./usr/share/man/html8/pc532			base-obsolete		obsolete
 ./usr/share/man/html8/playstation		base-obsolete		obsolete
@@ -5053,7 +5051,6 @@
 ./usr/share/man/man8/news68k			base-man-share
 ./usr/share/man/man8/newsmips			base-man-share
 ./usr/share/man/man8/next68k			base-man-share
-./usr/share/man/man8/nintendoppc		base-man-share
 ./usr/share/man/man8/ofppc			base-man-share
 ./usr/share/man/man8/pc532			base-obsolete		obsolete
 ./usr/share/man/man8/playstation2		base-man-share

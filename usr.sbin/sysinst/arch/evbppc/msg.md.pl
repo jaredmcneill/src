@@ -53,6 +53,6 @@ message dobootblks
 }
 
 message set_kernel_1
-{Kernel (WALNUT)}
+{Kernel (NINTENDO)}
 message set_kernel_2
-{Kernel (OPENBLOCKS266)}
+{Kernel (NINTENDO.MP)}

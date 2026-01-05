@@ -1,0 +1,7 @@
+# 	$NetBSD$
+
+include "arch/evbppc/conf/NINTENDO"
+
+#ident 		"INSTALL_NINTENDO-$Revision$"
+
+include "arch/evbppc/conf/INSTALL.inc"

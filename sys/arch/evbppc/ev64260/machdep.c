@@ -177,7 +177,7 @@ const struct gt_decode_info {
 };
 
 struct powerpc_bus_dma_tag ev64260_bus_dma_tag = {
-        0,				/* _bounce_thresh */
+        0, 0,				/* _bounce_thresh */
 	_bus_dmamap_create,
 	_bus_dmamap_destroy,
 	_bus_dmamap_load,

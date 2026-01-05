@@ -101,8 +101,6 @@
 ./newsmips/include/elf_machdep.h
 ./next68k/include/disklabel.h
 ./next68k/include/elf_machdep.h
-./nintendoppc/include/disklabel.h
-./nintendoppc/include/elf_machdep.h
 ./ofppc/include/disklabel.h
 ./ofppc/include/elf_machdep.h
 ./or1k/include/disklabel.h

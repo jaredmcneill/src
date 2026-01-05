@@ -45,9 +45,22 @@
 #include "msg_defs.h"
 #include "menu_defs.h"
 
+static bool cpu_espresso;
+
 void
 md_init(void)
 {
+	static const int mib[2] = {CTL_HW, HW_MODEL};
+	size_t len;
+	char *cpu_model;
+
+	sysctl(mib, 2, NULL, &len, NULL, 0);
+	cpu_model = malloc(len);
+	sysctl(mib, 2, cpu_model, &len, NULL, 0);
+
+	cpu_espresso = strstr(cpu_model, "Espresso") != NULL;
+
+	free(cpu_model);
 }
 
 void
@@ -56,6 +69,21 @@ md_init_set_status(int flags)
 	struct utsname instsys;
 
 	(void)flags;
+
+	/*
+	 * Get the name of the install kernel we are running under and
+	 * enable the installation of the corresponding kernel.
+	 */
+	uname(&instsys);
+	if (strstr(instsys.version, "(INSTALL_NINTENDO")) {
+		if (cpu_espresso) {
+			set_kernel_set(EVBPPC_SET_KERNEL_NINTENDO_MP);
+			set_noextract_set(EVBPPC_SET_KERNEL_NINTENDO_MP);
+		} else {
+			set_kernel_set(EVBPPC_SET_KERNEL_NINTENDO);
+			set_noextract_set(EVBPPC_SET_KERNEL_NINTENDO);
+		}
+	}
 }
 
 bool

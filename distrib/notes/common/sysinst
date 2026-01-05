@@ -48,9 +48,8 @@
 .  ds part_usr e
 .\}
 .if \n[amiga]:\n[amigappc]:\n[arc]:\n[atari]:\n[cobalt]:\n[evbmips]:\
-\n[evbppc]:\n[hppa]:\n[hpcmips]:\n[i386]:\n[macppc]:\n[nintendoppc]:\
-\n[ofppc]:\n[playstation2]:\n[sandpoint]:\n[sbmips]:\n[sgimips]:\
-\n[x86_64] \{\
+\n[evbppc]:\n[hppa]:\n[hpcmips]:\n[i386]:\n[macppc]:\n[ofppc]:\
+\n[playstation2]:\n[sandpoint]:\n[sbmips]:\n[sgimips]:\n[x86_64] \{\
 .  ds part_max p
 .\}
 .if \n[acorn32]:\n[cats]:\n[evbarm]:\n[evbppc]:\n[ews4800mips]:\
@@ -259,7 +258,6 @@ A hard drive with at least
 .if \n[news68k] 500
 .if \n[newsmips] 600
 .if \n[next68k] 500
-.if \n[nintendoppc] 600
 .if \n[ofppc] 600
 .if \n[pmax] 600
 .if \n[prep] 600

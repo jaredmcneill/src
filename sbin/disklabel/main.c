@@ -267,7 +267,6 @@ static const struct disklabel_params {
 	{ "evbsh3",	1, 1, 16, 2,  0,  0, 0 },		/* sh3 */
 	{ "hpcsh",	1, 1, 16, 2,  0,  0, LITTLE_ENDIAN },	/* sh3 */
 	{ "mmeye",	1, 1, 16, 2,  0,  0, 0 },		/* sh3 */
-	{ "nintendoppc",1, 1, 16, 2,  0,  0, BIG_ENDIAN },	/* powerpc */
 	{ "or1k",	1, 1, 16, 2,  0,  0, BIG_ENDIAN },	/* or1k */
 	{ "riscv",	1, 1, 16, 2,  0,  0, LITTLE_ENDIAN },	/* riscv */
 

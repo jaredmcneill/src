@@ -152,9 +152,6 @@ CPPFLAGS+=	-DPPC_OEA
 CPPFLAGS+=	-DPPC_OEA64
 .  endif
 .endif
-.if ${MACHINE} == "nintendoppc"
-CPPFLAGS+=	-DPPC_OEA
-.endif
 
 # If any of these files change, we need a full rebuild
 DPSRCS+=	${RUMPTOP}/Makefile.rump

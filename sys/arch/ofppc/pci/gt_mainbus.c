@@ -80,7 +80,7 @@ static char ex_storage[EXTENT_FIXED_STORAGE_SIZE(8)]
     __attribute__((aligned(8)));
 
 struct powerpc_bus_dma_tag pegasosii_bus_dma_tag = {
-        0,				/* _bounce_thresh */
+        0, 0,				/* _bounce_thresh */
 	_bus_dmamap_create,
 	_bus_dmamap_destroy,
 	_bus_dmamap_load,

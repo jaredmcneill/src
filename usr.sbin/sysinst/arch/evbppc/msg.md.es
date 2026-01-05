@@ -51,6 +51,6 @@ message dobootblks
 }
 
 message set_kernel_1
-{Núcleo (WALNUT)}
+{Núcleo (NINTENDO)}
 message set_kernel_2
-{Núcleo (OPENBLOCKS266)}
+{Núcleo (NINTENDO.MP)}

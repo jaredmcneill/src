@@ -798,7 +798,7 @@ MACHINES.mips=		algor arc cobalt emips evbmips ews4800mips \
 			hpcmips mipsco newsmips pmax sbmips sgimips
 MACHINES.or1k=		or1k
 MACHINES.powerpc=	amigappc bebox evbppc ibmnws macppc mvmeppc \
-			nintendoppc ofppc prep rs6000 sandpoint
+			ofppc prep rs6000 sandpoint
 MACHINES.riscv=		riscv
 MACHINES.sh3=		dreamcast evbsh3 hpcsh landisk mmeye
 MACHINES.sparc=		sparc sparc64
@@ -1467,7 +1467,6 @@ MKFIRMWARE.hppa=		yes
 MKFIRMWARE.i386=		yes
 MKFIRMWARE.mac68k=		yes
 MKFIRMWARE.macppc=		yes
-MKFIRMWARE.nintendoppc=		yes
 MKFIRMWARE.riscv=		yes
 MKFIRMWARE.sandpoint=		yes
 MKFIRMWARE.sparc64=		yes
@@ -1631,7 +1630,6 @@ ${var}?=	${${var}.${MACHINE_ARCH}:U${${var}.${MACHINE}:Uno}}
     ${MACHINE} == "newsmips"	|| \
     ${MACHINE} == "pmax"	|| \
     ${MACHINE} == "prep"	|| \
-    ${MACHINE} == "nintendoppc"	|| \
     ${MACHINE} == "ofppc"	|| \
     ${MACHINE} == "sgimips"	|| \
     ${MACHINE} == "shark"	|| \

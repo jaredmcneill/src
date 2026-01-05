@@ -65,7 +65,7 @@ struct rs6000_dma_cookie {
  */
 
 struct powerpc_bus_dma_tag mca_bus_dma_tag = {
-	0,			/* _bounce_thresh */
+	0, 0,			/* _bounce_thresh */
 	_mca_bus_dmamap_create,
 	_bus_dmamap_destroy,
 	_bus_dmamap_load,

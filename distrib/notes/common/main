@@ -68,9 +68,8 @@
 .as MACHINE_LIST " evbppc evbsh3 ews4800mips hp300 hppa hpcarm hpcmips hpcsh
 .as MACHINE_LIST " i386 ibmnws iyonix landisk luna68k mac68k macppc mipsco
 .as MACHINE_LIST " mmeye mvme68k mvmeppc netwinder news68k newsmips next68k
-.as MACHINE_LIST " nintendoppc ofppc playstation2 pmax prep rs6000 sandpoint
-.as MACHINE_LIST " sbmips sgimips shark sparc sparc64 sun2 sun3 vax x68k
-.as MACHINE_LIST " zaurus .
+.as MACHINE_LIST " ofppc playstation2 pmax prep rs6000 sandpoint sbmips
+.as MACHINE_LIST " sgimips shark sparc sparc64 sun2 sun3 vax x68k zaurus .
 .so \*[.CURDIR]/../common/macros
 .
 .\" Override <title> for HTML output

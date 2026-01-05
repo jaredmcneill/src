@@ -69,7 +69,7 @@ __KERNEL_RCSID(0, "$NetBSD: pci_machdep.c,v 1.38 2023/12/20 15:29:06 thorpej Exp
 #include <dev/pci/pcidevs.h>
 
 struct powerpc_bus_dma_tag pci_bus_dma_tag = {
-	0,			/* _bounce_thresh */
+	0, 0,			/* _bounce_thresh */
 	_bus_dmamap_create,
 	_bus_dmamap_destroy,
 	_bus_dmamap_load,

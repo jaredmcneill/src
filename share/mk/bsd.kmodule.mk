@@ -106,10 +106,6 @@ CPPFLAGS+=	-DPPC_OEA
 
 .endif
 
-.if ${MACHINE} == "nintendoppc"
-CPPFLAGS+=	-DPPC_OEA
-.endif
-
 
 _YKMSRCS=	${SRCS:M*.[ly]:C/\..$/.c/} ${YHEADER:D${SRCS:M*.y:.y=.h}}
 DPSRCS+=	${_YKMSRCS}

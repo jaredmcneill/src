@@ -9,7 +9,7 @@ SUBDIR=		common ddc dixmods doc dri dri2 i2c loader \
 		drivers
 
 .if ${MACHINE_ARCH} == "i386" || ${MACHINE_ARCH} == "x86_64" || \
-    (${MACHINE_CPU} == "powerpc" && ${MACHINE} != "evbppc" && ${MACHINE} != "nintendoppc")
+    (${MACHINE_CPU} == "powerpc" && ${MACHINE} != "evbppc")
 SUBDIR+=	int10 
 .endif
 

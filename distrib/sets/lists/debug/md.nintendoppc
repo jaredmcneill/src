@@ -1,8 +1,0 @@
-# $NetBSD$
-#
-./usr/lib/libpowerpc_espresso_g.a				comp-c-debuglib debuglib
-./usr/libdata/debug/lib/libpowerpc_espresso.so.0.0.debug	comp-sys-debug	debug,pic
-./usr/libdata/debug/netbsd-GENERIC.debug	comp-sysutil-debug	debug
-./usr/libdata/debug/netbsd-GENERIC.MP.debug	comp-sysutil-debug	debug
-./usr/libdata/debug/netbsd-INSTALL.debug	comp-sysutil-debug	debug
-./usr/libdata/debug/usr/lib/libpowerpc_espresso.so.0.0.debug	comp-sys-debug	debug,pic

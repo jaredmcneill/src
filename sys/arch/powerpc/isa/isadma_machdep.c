@@ -117,7 +117,7 @@ static void	_isa_dma_free_bouncebuf(bus_dma_tag_t, bus_dmamap_t);
  * buffers, if necessary.
  */
 struct powerpc_bus_dma_tag isa_bus_dma_tag = {
-	ISA_DMA_BOUNCE_THRESHOLD,
+	0, ISA_DMA_BOUNCE_THRESHOLD,
 	_isa_bus_dmamap_create,
 	_isa_bus_dmamap_destroy,
 	_isa_bus_dmamap_load,
