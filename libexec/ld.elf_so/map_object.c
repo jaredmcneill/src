@@ -471,6 +471,10 @@ _rtld_map_object(const char *path, int fd, const struct stat *sb)
 	if (obj->exidx_start)
 		obj->exidx_start = (void *)(obj->relocbase + (Elf_Addr)(uintptr_t)obj->exidx_start);
 #endif
+#ifdef RTLD_MAP_OBJECT_FIXUP
+	if (_rtld_map_object_fixup(obj) == -1)
+		goto error;
+#endif
 	xfree(segs);
 
 	return obj;

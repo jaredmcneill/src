@@ -425,6 +425,9 @@ Obj_Entry *_rtld_load_object(const char *, int);
 int _rtld_load_needed_objects(Obj_Entry *, int);
 int _rtld_preload(const char *);
 
+/* arch/<arch>/fixup.c */
+int _rtld_map_object_fixup(Obj_Entry *);
+
 #define	OBJ_ERR	(Obj_Entry *)(-1)
 /* path.c */
 void _rtld_add_paths(const char *, Search_Path **, const char *);
