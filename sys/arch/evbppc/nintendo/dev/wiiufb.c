@@ -241,10 +241,11 @@ wiiufb_consinit(void)
 	/*
 	 * Need to use the BAT mapping here as pmap isn't initialized yet.
 	 *
-	 * Unfortunately, we use a single large (2GB) BAT mapping for all
-	 * of MEM1, which means the early FB is mapped cacheable. This means
-	 * than nothing (it's useful for debugging) and it's only like this
-	 * until wiiufb is attached.
+	 * Unfortunately, we have a single large (256MB) BAT mapping to cover
+	 * both conventional memory and the framebuffer in MEM1, which means
+	 * the early FB is mapped cacheable. Better than nothing (it's
+	 * useful for debugging) and it's only like this until wiiufb is
+	 * attached later on.
 	 *
 	 * This could be enhanced in the future to hook in to rasops and
 	 * insert proper cache maintenance operations. Just don't flush the
