@@ -170,7 +170,7 @@ pi_init_intr(void)
 {
 	u_int cpu_num;
 
-	for (cpu_num = 0; cpu_num < CPU_MAXNUM; cpu_num++) {
+	for (cpu_num = 0; cpu_num < uimin(3, CPU_MAXNUM); cpu_num++) {
 		pic_s[cpu_num].irqmask = 0;
 		pic_s[cpu_num].actmask = 0;
 		if (wiiu_native) {

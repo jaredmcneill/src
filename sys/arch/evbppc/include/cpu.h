@@ -49,7 +49,7 @@ extern int fake_mapiodev;
 #endif
 
 #ifdef MULTIPROCESSOR
-#define CPU_MAXNUM 2
+#define CPU_MAXNUM 3
 #else
 #define CPU_MAXNUM 1
 #endif

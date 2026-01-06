@@ -81,7 +81,7 @@ ipi_latte_establish_ipi(int type, int level, void *ih_args)
 	char name[INTRDEVNAMEBUF];
 	int n;
 
-	for (n = 0; n < CPU_MAXNUM; n++) {
+	for (n = 0; n < uimin(3, CPU_MAXNUM); n++) {
 		snprintf(name, sizeof(name), "IPI cpu%u", n);
 		intr_establish_xname(WIIU_PI_IRQ_MB_CPU(n), type, level,
 		    ipi_intr, ih_args, name);
