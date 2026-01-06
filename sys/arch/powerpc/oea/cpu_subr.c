@@ -616,8 +616,8 @@ cpu_setup(device_t self, struct cpu_info *ci)
 
 	cpu_identify(model, sizeof(model));
 	aprint_naive("\n");
-	aprint_normal(": %s, ID %d%s, PVR 0x%08x\n", model,  cpu_number(),
-	    cpu_number() == 0 ? " (primary)" : "", pvr);
+	aprint_normal(": %s, ID %d%s\n", model,  cpu_number(),
+	    cpu_number() == 0 ? " (primary)" : "");
 
 	/* set the cpu number */
 	ci->ci_cpuid = cpu_number();
