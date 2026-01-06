@@ -33,6 +33,7 @@ __RCSID("$NetBSD$");
 
 #include <sys/types.h>
 #include <sys/mman.h>
+#include <sys/sysctl.h>
 #include <machine/cpu.h>
 #include <errno.h>
 #include "debug.h"
@@ -40,6 +41,7 @@ __RCSID("$NetBSD$");
 
 static bool _rtld_fixup_init;
 static uint32_t _rtld_ppc_pvr;
+static int _rtld_ncpus;
 
 union instr {
 	u_int	i_int;
@@ -59,15 +61,15 @@ union instr {
 
 #define IBMESPRESSO_P(_pvr)	(((_pvr) >> 16) == 0x7001)
 
-static inline uint32_t                                                        
+static inline uint32_t
 _rtld_ppc_mfpvr(void)
 {
-	uint32_t pvr;                                                           
+	uint32_t pvr;
 
-	asm volatile ("mfpvr %0" : "=r"(pvr));                                
+	asm volatile ("mfpvr %0" : "=r"(pvr));
 
 	return pvr;
-}                                                                               
+}
 
 int
 _rtld_map_object_fixup(Obj_Entry *obj)
@@ -76,10 +78,18 @@ _rtld_map_object_fixup(Obj_Entry *obj)
 	union instr previ;
 
 	if (!_rtld_fixup_init) {
+		ssize_t i;
+		size_t j;
+
 		_rtld_ppc_pvr = _rtld_ppc_mfpvr();
 		_rtld_fixup_init = true;
+		j = sizeof(_rtld_ncpus);
+		i = _rtld_sysctl("hw.ncpu", &_rtld_ncpus, &j);
+		if (i != CTLTYPE_INT) {
+			_rtld_ncpus = 1;
+		}
 	}
-	if (!IBMESPRESSO_P(_rtld_ppc_pvr)) {
+	if (!IBMESPRESSO_P(_rtld_ppc_pvr) && _rtld_ncpus == 1) {
 		return 0;
 	}
 
