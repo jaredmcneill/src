@@ -1016,24 +1016,11 @@ trapexit:
 	b	trapagain
 
 trapleave:
-#ifdef PPC_IBMESPRESSO
-/* Test fast return pending: */
-	ldint	%r4,L_MD_FASTRET(%r13)
-	andi.	%r4,%r4,1
-	beq	trapleave_noclear
-#endif
 	FRAME_RESTORE_CALLEE
 intrleave:
 	CLEAR_RESERVATION
 	FRAME_LEAVE(CI_TEMPSAVE)
 	RFI
-
-#ifdef PPC_IBMESPRESSO
-trapleave_noclear:
-	FRAME_RESTORE_CALLEE
-	FRAME_LEAVE(CI_TEMPSAVE)
-	RFI
-#endif
 
 /*
  * Trap handler for syscalls (EXC_SC)

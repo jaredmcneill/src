@@ -444,11 +444,7 @@ vm_signal:
 #ifdef PPC_IBMESPRESSO
 				if (fix_stwcx(l, tf)) {
 					tf->tf_srr0 += 4;
-					tf->tf_srr1 &=
-					    (PSL_USERSRR1|PSL_FP|PSL_VEC);
-					/* Fast return */
-					l->l_md.md_fastret = 1;
-					return;
+					break;
 				}
 #endif
 				ksi.ksi_code = ILL_ILLOPC;
@@ -1311,6 +1307,7 @@ fix_stwcx(struct lwp *l, struct trapframe *tf)
 	uint32_t cr;
 
 	if (copyin((void *)tf->tf_srr0, &instr.i_int, sizeof(instr)) != 0) {
+		printf("trap: copyin of 0x%08lx failed\n", tf->tf_srr0);
 		return 0;
 	}
 
