@@ -426,7 +426,7 @@ int _rtld_load_needed_objects(Obj_Entry *, int);
 int _rtld_preload(const char *);
 
 /* arch/<arch>/fixup.c */
-int _rtld_map_object_fixup(Obj_Entry *);
+int _rtld_map_segment_fixup(Elf_Phdr *, caddr_t, size_t, int);
 
 #define	OBJ_ERR	(Obj_Entry *)(-1)
 /* path.c */

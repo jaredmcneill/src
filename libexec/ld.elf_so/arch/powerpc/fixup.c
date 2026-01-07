@@ -72,9 +72,10 @@ _rtld_ppc_mfpvr(void)
 }
 
 int
-_rtld_map_object_fixup(Obj_Entry *obj)
+_rtld_map_segment_fixup(Elf_Phdr *phdr, caddr_t data_addr, size_t data_size,
+    int data_prot)
 {
-	uint32_t *where, *end;
+	uint32_t *start, *where, *end;
 	union instr previ;
 
 	if (!_rtld_fixup_init) {
@@ -92,14 +93,24 @@ _rtld_map_object_fixup(Obj_Entry *obj)
 	if (!IBMESPRESSO_P(_rtld_ppc_pvr) && _rtld_ncpus == 1) {
 		return 0;
 	}
+	if ((phdr->p_flags & PF_X) == 0) {
+		return 0;
+	}
 
-	where = (uint32_t *)obj->mapbase;
-	end = where + obj->textsize / sizeof(*where);
+	start = (uint32_t *)data_addr;
+	end = start + data_size / sizeof(*where);
 	previ.i_int = 0;
 
-	dbg(("fixup (espresso) from %p to %p\n", where, end));
+	dbg(("fixup (espresso) from %p to %p\n", start, end));
 
-	while (where < end) {
+	if ((data_prot & PROT_WRITE) == 0 &&
+	    mprotect(start, data_size, data_prot | PROT_WRITE) == -1) {
+		_rtld_error("Cannot write-enable segment: %s",
+		    xstrerror(errno));
+		return -1;
+	}
+
+	for (where = start; where < end; where++) {
 		union instr i = *(union instr *)where;
 
 		if (i.i_x.i_opcd == OPC_integer_31 &&
@@ -120,25 +131,19 @@ _rtld_map_object_fixup(Obj_Entry *obj)
 
 			i.i_x.i_rc = 0;
 
-			if (mprotect(where, 4, PROT_READ | PROT_WRITE) == -1) {
-				_rtld_error("%s: Cannot write-enable text "     
-				    "segment: %s", obj->path, xstrerror(errno));
-				return -1;
-			}
-
 			*where = i.i_int;
 			__syncicache(where, 4);
-
-			if (mprotect(where, 4, PROT_READ | PROT_EXEC) == -1) {
-				_rtld_error("%s: Cannot write-protect text "     
-				    "segment: %s", obj->path, xstrerror(errno));
-				return -1;
-			}
 		}
 
 next_opcode:
 		previ = i;
-		where++;
+	}
+
+	if ((data_prot & PROT_WRITE) == 0 &&
+	    mprotect(start, data_size, data_prot) == -1) {
+		_rtld_error("Cannot write-protect segment: %s",
+		    xstrerror(errno));
+		return -1;
 	}
 
 	return 0;
