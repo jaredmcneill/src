@@ -34,6 +34,10 @@
 #ifndef _PPC_ASM_H_
 #define _PPC_ASM_H_
 
+#ifdef _KERNEL_OPT
+#include "opt_ppcarch.h"
+#endif
+
 #ifdef _LP64
 
 /* ppc64 is always PIC, r2 is always the TOC */
