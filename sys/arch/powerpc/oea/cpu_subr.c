@@ -826,7 +826,7 @@ cpu_setup(device_t self, struct cpu_info *ci)
 		mtspr(SPR_IBMESPRESSO_HID2, 0);
 
 		spr = HID4_H4A | HID4_L2FM_64B | HID4_BPD_4 |
-		      HID4_SBE | HID4_LPE | HID4_ST0 |
+		      HID4_SBE | HID4_LPE | HID4_ST0 | HID4_DBP |
 		      HID4_L2MUM | HID4_L2_CCFI;
 		mtspr(SPR_IBMESPRESSO_HID4, spr);
 
