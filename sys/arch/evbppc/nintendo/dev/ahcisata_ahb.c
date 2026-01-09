@@ -54,8 +54,6 @@ __KERNEL_RCSID(0, "$NetBSD$");
 #define	WR4(sc, reg, val)	\
 	bus_space_write_4((sc)->sc_ahcit, (sc)->sc_ahcih, (reg), (val))
 
-extern struct powerpc_bus_dma_tag wii_mem2_bus_dma_tag;
-
 static int
 ahcisata_ahb_intr(void *arg)
 {
@@ -88,7 +86,7 @@ ahcisata_ahb_attach(device_t parent, device_t self, void *aux)
 	struct ahci_softc * const sc = device_private(self);
 
 	sc->sc_atac.atac_dev = self;
-	sc->sc_dmat = &wii_mem2_bus_dma_tag;
+	sc->sc_dmat = aaa->aaa_dmat;
 	sc->sc_ahcit = aaa->aaa_bst;
 	sc->sc_ahcis = 0x408;
 	if (bus_space_map(sc->sc_ahcit, aaa->aaa_addr, sc->sc_ahcis, 0,
