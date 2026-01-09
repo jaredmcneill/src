@@ -202,7 +202,8 @@ struct powerpc_bus_dma_tag wii_bus_dma_tag = {
 };
 
 struct powerpc_bus_dma_tag wii_mem2_bus_dma_tag = {
-	WII_MEM2_BASE, 0,		/* _bounce_thresh_min/max */
+	WII_MEM2_BASE,				/* _bounce_thresh_min */
+	WII_MEM2_BASE + WII_MEM2_SIZE - 1,	/* _bounce_thresh_max */
 	_bus_dmamap_create,
 	_bus_dmamap_destroy,
 	_bus_dmamap_load,
