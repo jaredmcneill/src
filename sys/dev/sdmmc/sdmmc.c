@@ -695,8 +695,7 @@ sdmmc_function_alloc(struct sdmmc_softc *sc)
 	sf->blklen = sdmmc_chip_host_maxblklen(sc->sc_sct, sc->sc_sch);
 
 	if (ISSET(sc->sc_flags, SMF_MEM_MODE) &&
-	    ISSET(sc->sc_caps, SMC_CAPS_DMA) &&
-	    !ISSET(sc->sc_caps, SMC_CAPS_MULTI_SEG_DMA)) {
+	    ISSET(sc->sc_caps, SMC_CAPS_DMA)) {
 		bus_dma_segment_t ds;
 		int rseg, error;
 
@@ -744,8 +743,7 @@ sdmmc_function_free(struct sdmmc_function *sf)
 	struct sdmmc_softc *sc = sf->sc;
 
 	if (ISSET(sc->sc_flags, SMF_MEM_MODE) &&
-	    ISSET(sc->sc_caps, SMC_CAPS_DMA) &&
-	    !ISSET(sc->sc_caps, SMC_CAPS_MULTI_SEG_DMA)) {
+	    ISSET(sc->sc_caps, SMC_CAPS_DMA)) {
 		bus_dmamap_destroy(sc->sc_dmat, sf->sseg_dmap);
 		bus_dmamap_unload(sc->sc_dmat, sf->bbuf_dmap);
 		bus_dmamem_unmap(sc->sc_dmat, sf->bbuf, MAXPHYS);

@@ -103,9 +103,9 @@ static int sdmmc_mem_single_read_block(struct sdmmc_function *, uint32_t,
 static int sdmmc_mem_single_write_block(struct sdmmc_function *, uint32_t,
     u_char *, size_t);
 static int sdmmc_mem_single_segment_dma_read_block(struct sdmmc_function *,
-    uint32_t, u_char *, size_t);
+    uint32_t, u_char *, size_t, bool);
 static int sdmmc_mem_single_segment_dma_write_block(struct sdmmc_function *,
-    uint32_t, u_char *, size_t);
+    uint32_t, u_char *, size_t, bool);
 static int sdmmc_mem_read_block_subr(struct sdmmc_function *, bus_dmamap_t,
     uint32_t, u_char *, size_t);
 static int sdmmc_mem_write_block_subr(struct sdmmc_function *, bus_dmamap_t,
@@ -2036,16 +2036,18 @@ sdmmc_mem_single_read_block(struct sdmmc_function *sf, uint32_t blkno,
  */
 static int
 sdmmc_mem_single_segment_dma_read_block(struct sdmmc_function *sf,
-    uint32_t blkno, u_char *data, size_t datalen)
+    uint32_t blkno, u_char *data, size_t datalen, bool force_bbuf)
 {
 	struct sdmmc_softc *sc = sf->sc;
-	bool use_bbuf = false;
+	bool use_bbuf = force_bbuf;
 	int error = 0;
 	int i;
 
-	for (i = 0; i < sc->sc_dmap->dm_nsegs; i++) {
+	for (i = 0; !use_bbuf && i < sc->sc_dmap->dm_nsegs; i++) {
+		bus_addr_t addr = sc->sc_dmap->dm_segs[i].ds_addr;
 		size_t len = sc->sc_dmap->dm_segs[i].ds_len;
-		if ((len % SDMMC_SECTOR_SIZE) != 0) {
+		if ((addr & 0x1f) != 0 ||
+		    (len % SDMMC_SECTOR_SIZE) != 0) {
 			use_bbuf = true;
 			break;
 		}
@@ -2198,9 +2200,9 @@ sdmmc_mem_read_block(struct sdmmc_function *sf, uint32_t blkno, u_char *data,
 	error = bus_dmamap_load(sc->sc_dmat, sc->sc_dmap, data, datalen, NULL,
 	    BUS_DMA_NOWAIT|BUS_DMA_READ);
 	if (error) {
-		/* Fallback to PIO */
-		error = sdmmc_mem_read_block_subr(sf, NULL, blkno, data,
-		    datalen);
+		/* Force bounce */
+		error = sdmmc_mem_single_segment_dma_read_block(sf, blkno,
+		    data, datalen, true);
 		goto out;
 	}
 
@@ -2216,7 +2218,7 @@ sdmmc_mem_read_block(struct sdmmc_function *sf, uint32_t blkno, u_char *data,
 	if (sc->sc_dmap->dm_nsegs > 1
 	    && !ISSET(sc->sc_caps, SMC_CAPS_MULTI_SEG_DMA)) {
 		error = sdmmc_mem_single_segment_dma_read_block(sf, blkno,
-		    data, datalen);
+		    data, datalen, false);
 		goto unload;
 	}
 
@@ -2266,16 +2268,18 @@ sdmmc_mem_single_write_block(struct sdmmc_function *sf, uint32_t blkno,
  */
 static int
 sdmmc_mem_single_segment_dma_write_block(struct sdmmc_function *sf,
-    uint32_t blkno, u_char *data, size_t datalen)
+    uint32_t blkno, u_char *data, size_t datalen, bool force_bbuf)
 {
 	struct sdmmc_softc *sc = sf->sc;
-	bool use_bbuf = false;
+	bool use_bbuf = force_bbuf;
 	int error = 0;
 	int i;
 
-	for (i = 0; i < sc->sc_dmap->dm_nsegs; i++) {
+	for (i = 0; !use_bbuf && i < sc->sc_dmap->dm_nsegs; i++) {
+		bus_addr_t addr = sc->sc_dmap->dm_segs[i].ds_addr;
 		size_t len = sc->sc_dmap->dm_segs[i].ds_len;
-		if ((len % SDMMC_SECTOR_SIZE) != 0) {
+		if ((addr & 0x1f) != 0 ||
+		    (len % SDMMC_SECTOR_SIZE) != 0) {
 			use_bbuf = true;
 			break;
 		}
@@ -2447,9 +2451,9 @@ sdmmc_mem_write_block(struct sdmmc_function *sf, uint32_t blkno, u_char *data,
 	error = bus_dmamap_load(sc->sc_dmat, sc->sc_dmap, data, datalen, NULL,
 	    BUS_DMA_NOWAIT|BUS_DMA_WRITE);
 	if (error) {
-		/* Fallback to PIO */
-		error = sdmmc_mem_write_block_subr(sf, NULL, blkno, data,
-		    datalen);
+		/* Force bounce */
+		error = sdmmc_mem_single_segment_dma_write_block(sf, blkno,
+		    data, datalen, true);
 		goto out;
 	}
 
@@ -2467,7 +2471,7 @@ sdmmc_mem_write_block(struct sdmmc_function *sf, uint32_t blkno, u_char *data,
 	if (sc->sc_dmap->dm_nsegs > 1
 	    && !ISSET(sc->sc_caps, SMC_CAPS_MULTI_SEG_DMA)) {
 		error = sdmmc_mem_single_segment_dma_write_block(sf, blkno,
-		    data, datalen);
+		    data, datalen, false);
 		goto unload;
 	}
 
