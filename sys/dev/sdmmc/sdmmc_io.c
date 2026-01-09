@@ -452,8 +452,7 @@ sdmmc_io_rw_extended(struct sdmmc_softc *sc, struct sdmmc_function *sf,
 			}
 			bus_dmamap_unload(sc->sc_dmat, sc->sc_dmap);
 		} else {
-			device_printf(sc->sc_dev,"dmamap load error = %d\n",
-			    error);
+			DPRINTF(("%s: dmamap load error = %d\n", error));
 			error = sdmmc_mmc_command(sc, &cmd);
 		}
 	} else {
